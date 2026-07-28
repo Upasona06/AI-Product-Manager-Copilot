@@ -10,13 +10,8 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import UploadCSVPage from './pages/UploadCSVPage';
 import FeedbackFormPage from './pages/FeedbackFormPage';
-import StatusPage from './pages/StatusPage';
-<<<<<<< HEAD
-import ClassificationPage from './pages/ClassificationPage';
-import AggregationPage from './pages/AggregationPage';
-=======
 import PrioritizationPage from './pages/PrioritizationPage';
->>>>>>> 287092b (Added Module 6 and Module 7 features)
+import StatusPage from './pages/StatusPage';
 
 function App() {
   return (
@@ -31,67 +26,54 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
 
               {/* Protected Product Manager Only Routes */}
-              <Route 
-                path="/dashboard" 
+              <Route
+                path="/dashboard"
                 element={
                   <ProtectedRoute allowedRoles={['product_manager']}>
                     <DashboardPage />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/upload/csv" 
+              <Route
+                path="/upload/csv"
                 element={
                   <ProtectedRoute allowedRoles={['product_manager']}>
                     <UploadCSVPage />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/status" 
+              <Route
+                path="/status"
                 element={
                   <ProtectedRoute allowedRoles={['product_manager']}>
                     <StatusPage />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-<<<<<<< HEAD
-                path="/classify" 
-                element={
-                  <ProtectedRoute allowedRoles={['product_manager']}>
-                    <ClassificationPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/aggregate" 
-                element={
-                  <ProtectedRoute allowedRoles={['product_manager']}>
-                    <AggregationPage />
-=======
-                path="/prioritization" 
+              <Route
+                path="/prioritization"
                 element={
                   <ProtectedRoute allowedRoles={['product_manager']}>
                     <PrioritizationPage />
->>>>>>> 287092b (Added Module 6 and Module 7 features)
                   </ProtectedRoute>
-                } 
+                }
               />
 
+
+
               {/* Protected Combined Routes (PM & Customer) */}
-              <Route 
-                path="/upload/feedback" 
+              <Route
+                path="/upload/feedback"
                 element={
                   <ProtectedRoute allowedRoles={['product_manager', 'customer']}>
                     <FeedbackFormPage />
                   </ProtectedRoute>
-                } 
+                }
               />
 
               {/* Root redirects to dashboard (PM) or form (Customer) inside login redirect logic */}
               <Route path="/" element={<Navigate to="/login" replace />} />
-              
+
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>

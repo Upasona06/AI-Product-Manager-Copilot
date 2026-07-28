@@ -13,13 +13,15 @@ const Navbar = () => {
   };
 
   if (!isAuthenticated || !user) {
-    return null; // Don't render navigation for unauthenticated flows
+    return null;
   }
 
-  const isActive = (path) => location.pathname === path ? 'active-link' : '';
+  const isActive = (path) =>
+    location.pathname === path ? 'active-link' : '';
 
   return (
     <nav className="navbar-container">
+
       <div className="navbar-brand">
         <Link to="/" className="navbar-logo-link">
           <span className="logo-icon">🚀</span>
@@ -27,47 +29,70 @@ const Navbar = () => {
         </Link>
       </div>
 
+
       <div className="navbar-links">
+
         {user.role === 'product_manager' && (
           <>
-            <Link to="/dashboard" className={`navbar-link-item ${isActive('/dashboard')}`}>
+            <Link
+              to="/dashboard"
+              className={`navbar-link-item ${isActive('/dashboard')}`}
+            >
               📊 Dashboard
             </Link>
-            <Link to="/upload/csv" className={`navbar-link-item ${isActive('/upload/csv')}`}>
+
+            <Link
+              to="/upload/csv"
+              className={`navbar-link-item ${isActive('/upload/csv')}`}
+            >
               📂 Upload CSV
             </Link>
-            <Link to="/status" className={`navbar-link-item ${isActive('/status')}`}>
+
+            <Link
+              to="/status"
+              className={`navbar-link-item ${isActive('/status')}`}
+            >
               🕵️ Processed Status
-            </Link>
-<<<<<<< HEAD
-            <Link to="/classify" className={`navbar-link-item ${isActive('/classify')}`}>
-              🧠 AI Classify
-            </Link>
-            <Link to="/aggregate" className={`navbar-link-item ${isActive('/aggregate')}`}>
-              🔗 Feature Clusters
-=======
-            <Link to="/prioritization" className={`navbar-link-item ${isActive('/prioritization')}`}>
-              🎯 AI Prioritization
->>>>>>> 287092b (Added Module 6 and Module 7 features)
             </Link>
           </>
         )}
-        <Link to="/upload/feedback" className={`navbar-link-item ${isActive('/upload/feedback')}`}>
+
+
+        <Link
+          to="/upload/feedback"
+          className={`navbar-link-item ${isActive('/upload/feedback')}`}
+        >
           ✍️ Submit Feedback
         </Link>
+
       </div>
 
+
       <div className="navbar-user-profile">
+
         <div className="user-details">
-          <span className="user-name">{user.full_name || user.email}</span>
+          <span className="user-name">
+            {user.full_name || user.email}
+          </span>
+
           <span className="user-role-badge">
-            {user.role === 'product_manager' ? 'Product Manager' : 'Customer'}
+            {user.role === 'product_manager'
+              ? 'Product Manager'
+              : 'Customer'}
           </span>
         </div>
-        <button onClick={handleLogout} className="logout-btn" aria-label="Sign out">
+
+
+        <button
+          onClick={handleLogout}
+          className="logout-btn"
+          aria-label="Sign out"
+        >
           Sign Out
         </button>
+
       </div>
+
     </nav>
   );
 };
