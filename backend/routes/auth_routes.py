@@ -89,63 +89,70 @@ def register():
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    data = request.get_json() or {}
-    email = data.get("email")
-    password = data.get("password")
-    
-    if not email or not password:
-        return jsonify({
-            "success": False,
-            "error": "Missing email or password."
-        }), 400
-        
-    user = User.query.filter_by(email=email, is_active=True).first()
-    if not user:
-        return jsonify({
-            "success": False,
-            "error": "Invalid credentials."
-        }), 401
-        
-    # Verify password
-    password_bytes = password.encode('utf-8')
-    hash_bytes = user.password_hash.encode('utf-8')
-    
-    if not bcrypt.checkpw(password_bytes, hash_bytes):
-        return jsonify({
-            "success": False,
-            "error": "Invalid credentials."
-        }), 401
-        
-    # Update last_login_at
-    from datetime import datetime, timezone
     try:
-        user.last_login_at = datetime.now(timezone.utc)
-        db.session.commit()
+        data = request.get_json() or {}
+        email = data.get("email")
+        password = data.get("password")
+        
+        if not email or not password:
+            return jsonify({
+                "success": False,
+                "error": "Missing email or password."
+            }), 400
+            
+        user = User.query.filter_by(email=email, is_active=True).first()
+        if not user:
+            return jsonify({
+                "success": False,
+                "error": "Invalid credentials."
+            }), 401
+            
+        # Verify password
+        password_bytes = password.encode('utf-8')
+        hash_bytes = user.password_hash.encode('utf-8')
+        
+        if not bcrypt.checkpw(password_bytes, hash_bytes):
+            return jsonify({
+                "success": False,
+                "error": "Invalid credentials."
+            }), 401
+            
+        # Update last_login_at
+        from datetime import datetime, timezone
+        try:
+            user.last_login_at = datetime.now(timezone.utc)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"Failed to update last login timestamp: {e}")
+            
+        # Generate JWT Token with claims
+        additional_claims = {
+            "role": user.role,
+            "project_id": str(user.project_id) if user.project_id else None,
+            "full_name": user.full_name
+        }
+        
+        access_token = create_access_token(
+            identity=str(user.user_id),
+            additional_claims=additional_claims
+        )
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "access_token": access_token,
+                "user_id": str(user.user_id),
+                "role": user.role,
+                "project_id": str(user.project_id) if user.project_id else None
+            }
+        }), 200
     except Exception as e:
         db.session.rollback()
-        print(f"Failed to update last login timestamp: {e}")
-        
-    # Generate JWT Token with claims
-    additional_claims = {
-        "role": user.role,
-        "project_id": str(user.project_id) if user.project_id else None,
-        "full_name": user.full_name
-    }
-    
-    access_token = create_access_token(
-        identity=str(user.user_id),
-        additional_claims=additional_claims
-    )
-    
-    return jsonify({
-        "success": True,
-        "data": {
-            "access_token": access_token,
-            "user_id": str(user.user_id),
-            "role": user.role,
-            "project_id": str(user.project_id) if user.project_id else None
-        }
-    }), 200
+        return jsonify({
+            "success": False,
+            "error": f"An internal server or database error occurred: {str(e)}"
+        }), 500
 
 
 @auth_bp.route("/me", methods=["GET"])
@@ -162,4 +169,4 @@ def me():
     return jsonify({
         "success": True,
         "data": user.to_dict()
-    }), 200
+    }), 200 

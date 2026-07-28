@@ -11,7 +11,6 @@ import time
 from datetime import datetime, timezone
 import numpy as np
 from scipy.spatial.distance import cosine
-from sentence_transformers import SentenceTransformer
 
 from database.db import db
 from models.raw_feedback import RawFeedback
@@ -46,8 +45,9 @@ class ProcessingPipeline:
         self.model_name = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
         self.threshold = float(os.getenv("SIMILARITY_THRESHOLD", 0.85))
         
-        # Load SentenceTransformer model
+        # Load SentenceTransformer model dynamically
         try:
+            from sentence_transformers import SentenceTransformer
             self.model = SentenceTransformer(self.model_name)
         except Exception as e:
             print(f"Error loading SentenceTransformer '{self.model_name}': {e}. Using dummy embedding model fallback.")

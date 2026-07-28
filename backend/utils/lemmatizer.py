@@ -2,7 +2,6 @@
 utils/lemmatizer.py — Module 3 lemmatization utility using spaCy
 """
 
-import spacy
 import sys
 import subprocess
 
@@ -14,6 +13,7 @@ def get_nlp():
     if nlp is not None:
         return nlp
     
+    import spacy
     model_name = "en_core_web_sm"
     try:
         nlp = spacy.load(model_name)

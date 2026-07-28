@@ -39,11 +39,16 @@ const Navbar = () => {
             <Link to="/status" className={`navbar-link-item ${isActive('/status')}`}>
               🕵️ Processed Status
             </Link>
+<<<<<<< HEAD
             <Link to="/classify" className={`navbar-link-item ${isActive('/classify')}`}>
               🧠 AI Classify
             </Link>
             <Link to="/aggregate" className={`navbar-link-item ${isActive('/aggregate')}`}>
               🔗 Feature Clusters
+=======
+            <Link to="/prioritization" className={`navbar-link-item ${isActive('/prioritization')}`}>
+              🎯 AI Prioritization
+>>>>>>> 287092b (Added Module 6 and Module 7 features)
             </Link>
           </>
         )}

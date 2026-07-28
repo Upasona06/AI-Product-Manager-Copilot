@@ -11,8 +11,12 @@ import DashboardPage from './pages/DashboardPage';
 import UploadCSVPage from './pages/UploadCSVPage';
 import FeedbackFormPage from './pages/FeedbackFormPage';
 import StatusPage from './pages/StatusPage';
+<<<<<<< HEAD
 import ClassificationPage from './pages/ClassificationPage';
 import AggregationPage from './pages/AggregationPage';
+=======
+import PrioritizationPage from './pages/PrioritizationPage';
+>>>>>>> 287092b (Added Module 6 and Module 7 features)
 
 function App() {
   return (
@@ -52,6 +56,7 @@ function App() {
                 } 
               />
               <Route 
+<<<<<<< HEAD
                 path="/classify" 
                 element={
                   <ProtectedRoute allowedRoles={['product_manager']}>
@@ -64,6 +69,12 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['product_manager']}>
                     <AggregationPage />
+=======
+                path="/prioritization" 
+                element={
+                  <ProtectedRoute allowedRoles={['product_manager']}>
+                    <PrioritizationPage />
+>>>>>>> 287092b (Added Module 6 and Module 7 features)
                   </ProtectedRoute>
                 } 
               />
