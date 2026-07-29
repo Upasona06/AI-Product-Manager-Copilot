@@ -1,0 +1,186 @@
+"""
+app.py — Flask application factory entrypoint
+"""
+
+import os
+from flask import Flask, jsonify
+from flask_jwt_extended import JWTManager
+from flask_cors import CORS
+
+from config import get_config
+from database.db import db
+from routes.auth_routes import auth_bp
+from routes.ingest_routes import ingest_bp
+from routes.process_routes import process_bp
+<<<<<<< HEAD
+from routes.classify_routes import classify_bp
+from routes.aggregate_routes import aggregate_bp
+=======
+from routes.prioritize_routes import prioritize_bp
+from routes.rag_routes import rag_bp
+
+# Import Context Retrieval
+from context_service import retrieve_context
+
+>>>>>>> 287092b (Added Module 6 and Module 7 features)
+
+def create_app(config_class=None):
+    app = Flask(__name__)
+
+    # Load configuration
+    if config_class is None:
+        config_class = get_config()
+
+    app.config.from_object(config_class)
+
+    # Initialize database
+    db.init_app(app)
+
+    # JWT
+    jwt = JWTManager(app)
+
+    # CORS
+    frontend_origin = app.config.get(
+        "FRONTEND_ORIGIN",
+        "http://localhost:5173"
+    )
+
+    CORS(
+        app,
+        resources={r"/api/*": {"origins": r".*"}},
+        supports_credentials=True
+    )
+
+    # ------------------------
+    # Register Blueprints
+    # ------------------------
+
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(ingest_bp, url_prefix="/api/ingest")
+    app.register_blueprint(process_bp, url_prefix="/api/process")
+<<<<<<< HEAD
+    app.register_blueprint(classify_bp, url_prefix="/api/classify")
+    app.register_blueprint(aggregate_bp, url_prefix="/api/aggregate")
+    
+    # Global Error Handlers
+=======
+    app.register_blueprint(prioritize_bp, url_prefix="/api/prioritize")
+    app.register_blueprint(rag_bp, url_prefix="/api/rag")
+
+    # ======================================================
+    # MODULE 7 - KNOWLEDGE BASE & RAG ENGINE
+    # Context Retrieval API
+    # ======================================================
+
+    @app.route("/api/context/<query>", methods=["GET"])
+    def context(query):
+        try:
+            result = retrieve_context(query)
+
+            return jsonify({
+                "success": True,
+                "query": query,
+                "context": result
+            })
+
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "error": str(e)
+            }), 500
+
+    # ------------------------
+    # Error Handlers
+    # ------------------------
+
+>>>>>>> 287092b (Added Module 6 and Module 7 features)
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            "success": False,
+            "error": "Bad request",
+            "details": str(error)
+        }), 400
+
+    @app.errorhandler(401)
+    def unauthorized(error):
+        return jsonify({
+            "success": False,
+            "error": "Unauthorized access token",
+            "details": str(error)
+        }), 401
+
+    @app.errorhandler(403)
+    def forbidden(error):
+        return jsonify({
+            "success": False,
+            "error": "Forbidden: Insufficient privileges",
+            "details": str(error)
+        }), 403
+
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({
+            "success": False,
+            "error": "Resource not found",
+            "details": str(error)
+        }), 404
+
+    @app.errorhandler(422)
+    def unprocessable_entity(error):
+        return jsonify({
+            "success": False,
+            "error": "Unprocessable entity schema mismatch",
+            "details": str(error)
+        }), 422
+
+    @app.errorhandler(500)
+    def internal_server_error(error):
+        return jsonify({
+            "success": False,
+            "error": "Internal server error occurred",
+            "details": str(error)
+        }), 500
+
+    # ------------------------
+    # JWT Error Handlers
+    # ------------------------
+
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error_string):
+        return jsonify({
+            "success": False,
+            "error": "Signature verification failed",
+            "details": error_string
+        }), 401
+
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        return jsonify({
+            "success": False,
+            "error": "Token has expired",
+            "details": "Please log in again."
+        }), 401
+
+    @jwt.unauthorized_loader
+    def missing_token_callback(error_string):
+        return jsonify({
+            "success": False,
+            "error": "Authorization header is missing",
+            "details": error_string
+        }), 401
+
+    return app
+
+
+if __name__ == "__main__":
+    app = create_app()
+
+    port = int(os.getenv("FLASK_PORT", 5000))
+    host = os.getenv("FLASK_HOST", "0.0.0.0")
+
+    app.run(
+        host=host,
+        port=port,
+        debug=app.config.get("DEBUG", True)
+    )
