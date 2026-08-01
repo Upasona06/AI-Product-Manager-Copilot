@@ -21,7 +21,6 @@ const Navbar = () => {
 
   return (
     <nav className="navbar-container">
-
       <div className="navbar-brand">
         <Link to="/" className="navbar-logo-link">
           <span className="logo-icon">🚀</span>
@@ -29,9 +28,7 @@ const Navbar = () => {
         </Link>
       </div>
 
-
       <div className="navbar-links">
-
         {user.role === 'product_manager' && (
           <>
             <Link
@@ -54,9 +51,16 @@ const Navbar = () => {
             >
               🕵️ Processed Status
             </Link>
+
+            {/* ===== Module 7 ===== */}
+            <Link
+              to="/knowledge-base"
+              className={`navbar-link-item ${isActive('/knowledge-base')}`}
+            >
+              🧠 Knowledge Base
+            </Link>
           </>
         )}
-
 
         <Link
           to="/upload/feedback"
@@ -64,12 +68,9 @@ const Navbar = () => {
         >
           ✍️ Submit Feedback
         </Link>
-
       </div>
 
-
       <div className="navbar-user-profile">
-
         <div className="user-details">
           <span className="user-name">
             {user.full_name || user.email}
@@ -82,7 +83,6 @@ const Navbar = () => {
           </span>
         </div>
 
-
         <button
           onClick={handleLogout}
           className="logout-btn"
@@ -90,9 +90,7 @@ const Navbar = () => {
         >
           Sign Out
         </button>
-
       </div>
-
     </nav>
   );
 };

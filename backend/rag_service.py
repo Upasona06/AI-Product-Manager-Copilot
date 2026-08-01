@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 KB_DIR = os.path.join(BASE_DIR, "knowledge_base")
 
 DOC_FILE = os.path.join(KB_DIR, "documents.json")
@@ -13,17 +13,11 @@ EMBED_FILE = os.path.join(KB_DIR, "embeddings.json")
 
 
 def load_documents():
-    if not os.path.exists(DOC_FILE):
-        return []
-
     with open(DOC_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def load_embeddings():
-    if not os.path.exists(EMBED_FILE):
-        return []
-
     with open(EMBED_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -32,9 +26,6 @@ def semantic_search(query):
 
     docs = load_documents()
     embeddings = load_embeddings()
-
-    if len(docs) == 0:
-        return []
 
     query_embedding = model.encode(query)
 

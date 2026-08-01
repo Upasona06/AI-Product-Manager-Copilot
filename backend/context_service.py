@@ -1,4 +1,3 @@
-
 from rag_service import semantic_search
 
 def retrieve_context(query):

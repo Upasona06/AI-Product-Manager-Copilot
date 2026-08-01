@@ -4,13 +4,5 @@ routes/__init__.py
 from .auth_routes import auth_bp
 from .ingest_routes import ingest_bp
 from .process_routes import process_bp
-<<<<<<< HEAD
-from .classify_routes import classify_bp
-from .aggregate_routes import aggregate_bp
 
-__all__ = ["auth_bp", "ingest_bp", "process_bp", "classify_bp", "aggregate_bp"]
-=======
-from .rag_routes import rag_bp
-
-__all__ = ["auth_bp", "ingest_bp", "process_bp", "rag_bp"]
->>>>>>> 287092b (Added Module 6 and Module 7 features)
+__all__ = ["auth_bp", "ingest_bp", "process_bp"]
