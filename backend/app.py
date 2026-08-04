@@ -12,29 +12,64 @@ from database.db import db
 from routes.auth_routes import auth_bp
 from routes.ingest_routes import ingest_bp
 from routes.process_routes import process_bp
+from routes.classify_routes import classify_bp
+from routes.aggregate_routes import aggregate_bp
+from routes.prioritize_routes import prioritize_bp
+from routes.rag_routes import rag_bp
+
+# Import Context Retrieval
+from context_service import retrieve_context
 
 def create_app(config_class=None):
     app = Flask(__name__)
-    
+
     # Load configuration
     if config_class is None:
         config_class = get_config()
+
     app.config.from_object(config_class)
-    
-    # Initialize Extensions
+
+    # Initialize database
     db.init_app(app)
-    
+
+    # JWT
     jwt = JWTManager(app)
-    
+
     # Configure CORS to allow frontend requests
     frontend_origin = app.config.get("FRONTEND_ORIGIN", "http://localhost:5173")
     CORS(app, resources={r"/api/*": {"origins": [frontend_origin]}})
-    
+
     # Register Blueprints
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(ingest_bp, url_prefix="/api/ingest")
     app.register_blueprint(process_bp, url_prefix="/api/process")
-    
+    app.register_blueprint(classify_bp, url_prefix="/api/classify")
+    app.register_blueprint(aggregate_bp, url_prefix="/api/aggregate")
+    app.register_blueprint(prioritize_bp, url_prefix="/api/prioritize")
+    app.register_blueprint(rag_bp, url_prefix="/api/rag")
+
+    # ======================================================
+    # MODULE 7 - KNOWLEDGE BASE & RAG ENGINE
+    # Context Retrieval API
+    # ======================================================
+
+    @app.route("/api/context/<query>", methods=["GET"])
+    def context(query):
+        try:
+            result = retrieve_context(query)
+
+            return jsonify({
+                "success": True,
+                "query": query,
+                "context": result
+            })
+
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "error": str(e)
+            }), 500
+
     # Global Error Handlers
     @app.errorhandler(400)
     def bad_request(error):
