@@ -12,6 +12,7 @@ import UploadCSVPage from './pages/UploadCSVPage';
 import FeedbackFormPage from './pages/FeedbackFormPage';
 import PrioritizationPage from './pages/PrioritizationPage';
 import StatusPage from './pages/StatusPage';
+import KnowledgeBasePage from './pages/KnowledgeBasePage';
 
 function App() {
   return (
@@ -55,6 +56,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['product_manager']}>
                     <PrioritizationPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/knowledge-base"
+                element={
+                  <ProtectedRoute allowedRoles={['product_manager']}>
+                    <KnowledgeBasePage />
                   </ProtectedRoute>
                 }
               />

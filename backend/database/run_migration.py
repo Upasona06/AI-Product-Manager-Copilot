@@ -23,7 +23,12 @@ def run_migration():
     
     # Migration scripts to run in sequence
     migration_dir = os.path.dirname(os.path.abspath(__file__))
-    migration_files = ["init_schema.sql", "add_classified_feedback.sql"]
+    migration_files = [
+        "init_schema.sql", 
+        "add_classified_feedback.sql", 
+        "add_aggregated_features.sql", 
+        "add_rag_tables.sql"
+    ]
     
     # Verify all migration files exist before starting
     for filename in migration_files:
@@ -35,6 +40,7 @@ def run_migration():
     # Connect and run
     try:
         # Connect to postgres server first to ensure DB exists, if not, create it
+        # Parse params from URL
         db_user = os.getenv("DB_USER", "postgres")
         db_pass = os.getenv("DB_PASSWORD", "9699")
         db_host = os.getenv("DB_HOST", "localhost")
@@ -76,6 +82,7 @@ def run_migration():
                 sql_content = f.read()
             cur.execute(sql_content)
             print(f"Migration {filename} executed successfully.")
+            
         cur.close()
         conn.close()
         return True

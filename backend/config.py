@@ -65,14 +65,14 @@ class Config:
     PIPELINE_VERSION = os.getenv("PIPELINE_VERSION", "1.0.0")
 
     # ------------------------------------------------------------------
-<<<<<<< HEAD
     # Module 5 Feature Request Aggregation
     # ------------------------------------------------------------------
     AGGREGATION_CLUSTER_THRESHOLD = int(
         os.getenv("AGGREGATION_CLUSTER_THRESHOLD", 2)
     )
     AGGREGATION_PROMPT_VERSION = os.getenv("AGGREGATION_PROMPT_VERSION", "1.0.0")
-=======
+
+    # ------------------------------------------------------------------
     # Module 7 RAG / Knowledge Base
     # ------------------------------------------------------------------
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
@@ -81,7 +81,6 @@ class Config:
     CHROMADB_COLLECTION_NAME = os.getenv("CHROMADB_COLLECTION_NAME", "feedback_embeddings")
     RAG_SEARCH_TOP_K = int(os.getenv("RAG_SEARCH_TOP_K", 10))
     RAG_FALLBACK_EMBEDDING_MODEL = os.getenv("RAG_FALLBACK_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
->>>>>>> 287092b (Added Module 6 and Module 7 features)
 
     # ------------------------------------------------------------------
     # Logging
