@@ -4,7 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 
-// Pages
+// Page Imports
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
@@ -15,7 +15,7 @@ import ClassificationPage from './pages/ClassificationPage';
 import AggregationPage from './pages/AggregationPage';
 import PrioritizationPage from './pages/PrioritizationPage';
 import KnowledgeBasePage from './pages/KnowledgeBasePage';
-import PRDGeneratorPage from './pages/PRDGeneratorPage'
+import PRDGeneratorPage from './pages/PRDGeneratorPage';
 
 function App() {
   return (
@@ -26,12 +26,11 @@ function App() {
 
           <main className="main-content-layout">
             <Routes>
-
               {/* Public Routes */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
 
-              {/* Protected Routes */}
+              {/* Protected Product Manager Only Routes */}
               <Route
                 path="/dashboard"
                 element={
@@ -40,7 +39,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/upload/csv"
                 element={
@@ -49,7 +47,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/status"
                 element={
@@ -58,7 +55,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/classify"
                 element={
@@ -67,7 +63,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/aggregate"
                 element={
@@ -76,7 +71,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/prioritization"
                 element={
@@ -85,7 +79,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/knowledge-base"
                 element={
@@ -94,7 +87,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/prd-generator"
                 element={
@@ -104,7 +96,7 @@ function App() {
                 }
               />
 
-              {/* Customer + Product Manager */}
+              {/* Protected Combined Routes (PM & Customer) */}
               <Route
                 path="/upload/feedback"
                 element={
@@ -114,15 +106,13 @@ function App() {
                 }
               />
 
-              {/* Default Route */}
+              {/* Root redirects to login */}
               <Route path="/" element={<Navigate to="/login" replace />} />
 
-              {/* 404 */}
+              {/* Fallback */}
               <Route path="*" element={<Navigate to="/login" replace />} />
-
             </Routes>
           </main>
-
         </div>
       </Router>
     </AuthProvider>

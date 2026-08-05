@@ -196,5 +196,43 @@ CREATE TRIGGER trg_processed_feedback_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================
+-- TABLE: prioritized_features (Module 6)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS prioritized_features (
+    prioritization_id       UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    processed_feedback_id   UUID            NOT NULL UNIQUE REFERENCES processed_feedback(processed_id) ON DELETE CASCADE,
+    feature_name            VARCHAR(255)    NOT NULL,
+    description             TEXT,
+    impact_score            DOUBLE PRECISION NOT NULL,
+    effort_score            DOUBLE PRECISION NOT NULL,
+    risk_score              DOUBLE PRECISION NOT NULL,
+    customer_value_score    DOUBLE PRECISION NOT NULL,
+    roi_score               DOUBLE PRECISION NOT NULL,
+    priority_score          DOUBLE PRECISION NOT NULL,
+    priority_class          VARCHAR(50)     NOT NULL CHECK (priority_class IN ('High', 'Medium', 'Low')),
+    rice_reach              INTEGER         NOT NULL,
+    rice_impact             DOUBLE PRECISION NOT NULL,
+    rice_confidence         DOUBLE PRECISION NOT NULL,
+    rice_effort             DOUBLE PRECISION NOT NULL,
+    rice_score              DOUBLE PRECISION NOT NULL,
+    moscow_category         VARCHAR(50)     NOT NULL CHECK (moscow_category IN ('Must Have', 'Should Have', 'Could Have', 'Won''t Have')),
+    business_recommendation TEXT            NOT NULL,
+    created_at              TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    updated_at              TIMESTAMPTZ     NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_prioritized_features_priority_score ON prioritized_features (priority_score DESC);
+CREATE INDEX IF NOT EXISTS idx_prioritized_features_roi_score ON prioritized_features (roi_score DESC);
+CREATE INDEX IF NOT EXISTS idx_prioritized_features_class ON prioritized_features (priority_class);
+
+DROP TRIGGER IF EXISTS trg_prioritized_features_updated_at ON prioritized_features;
+CREATE TRIGGER trg_prioritized_features_updated_at
+    BEFORE UPDATE ON prioritized_features FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+COMMENT ON TABLE  prioritized_features                         IS 'AI-prioritized features with RICE, ROI, and MoSCoW metrics.';
+COMMENT ON COLUMN prioritized_features.processed_feedback_id  IS 'FK link to the processed feedback record representing this feature';
+
+-- ============================================================
 -- END OF MIGRATION
 -- ============================================================

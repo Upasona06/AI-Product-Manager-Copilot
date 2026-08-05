@@ -56,7 +56,7 @@ const Navbar = () => {
               to="/prioritization"
               className={`navbar-link-item ${isActive('/prioritization')}`}
             >
-              🎯 Prioritization
+              🎯 AI Prioritization
             </Link>
 
             <Link
