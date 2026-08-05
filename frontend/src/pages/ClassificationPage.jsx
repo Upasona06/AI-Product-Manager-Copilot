@@ -62,7 +62,7 @@ const ClassificationPage = () => {
   // ─── Fetch Classification Results ───────────────────────
   const fetchResults = async (currentPage = 1) => {
     try {
-      let url = `/classify/results?project_id=${user.project_id}&page=${currentPage}&page_size=${pageSize}`;
+      let url = `/api/classify/results?project_id=${user.project_id}&page=${currentPage}&page_size=${pageSize}`;
       if (filterCategory) url += `&category=${encodeURIComponent(filterCategory)}`;
       if (filterSentiment) url += `&sentiment=${encodeURIComponent(filterSentiment)}`;
 
@@ -80,7 +80,7 @@ const ClassificationPage = () => {
   // ─── Fetch Classification Stats ─────────────────────────
   const fetchStats = async () => {
     try {
-      const res = await api.get(`/classify/stats?project_id=${user.project_id}`);
+      const res = await api.get(`/api/classify/stats?project_id=${user.project_id}`);
       if (res.data.success) {
         setStats(res.data.data);
       }
@@ -110,7 +110,7 @@ const ClassificationPage = () => {
     setError(null);
 
     try {
-      const res = await api.post('/classify/run', { project_id: user.project_id });
+      const res = await api.post('/api/classify/run', { project_id: user.project_id });
       if (res.data.success) {
         const { job_id, unclassified_count } = res.data.data;
         if (unclassified_count === 0) {
@@ -121,7 +121,7 @@ const ClassificationPage = () => {
           // Poll for completion
           const pollInterval = setInterval(async () => {
             try {
-              const statusRes = await api.get(`/classify/status/${job_id}`);
+              const statusRes = await api.get(`/api/classify/status/${job_id}`);
               if (statusRes.data.success) {
                 const jobData = statusRes.data.data;
                 if (jobData.status === 'completed') {
@@ -172,7 +172,7 @@ const ClassificationPage = () => {
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-meta">
-          <h1>🧠 AI Classification & Theme Extraction</h1>
+          <h1>🧠 Classification & Theme Extraction</h1>
 
         </div>
         <button
@@ -180,7 +180,7 @@ const ClassificationPage = () => {
           className="action-btn run-pipeline-btn"
           disabled={classifying}
         >
-          {classifying ? 'Classifying...' : '🤖 Run AI Classification'}
+          {classifying ? 'Classifying...' : '🤖 Run Classification'}
         </button>
       </div>
 
@@ -252,7 +252,7 @@ const ClassificationPage = () => {
             <div className="empty-state glass-panel">
               <p>
                 No classified feedback yet. Run the preprocessing pipeline first (Module 3),
-                then click <strong>"Run AI Classification"</strong> to classify feedback.
+                then click <strong>"Run Classification"</strong> to classify feedback.
               </p>
             </div>
           ) : (

@@ -22,7 +22,7 @@ const Navbar = () => {
   return (
     <nav className="navbar-container">
       <div className="navbar-brand">
-        <Link to="/" className="navbar-logo-link">
+        <Link to="/dashboard" className="navbar-logo-link">
           <span className="logo-icon">🚀</span>
           <span className="logo-text">PM Copilot</span>
         </Link>
@@ -52,22 +52,35 @@ const Navbar = () => {
               🕵️ Processed Status
             </Link>
 
-            {/* ===== Module 7 ===== */}
+            <Link
+              to="/prioritization"
+              className={`navbar-link-item ${isActive('/prioritization')}`}
+            >
+              🎯 AI Prioritization
+            </Link>
+
             <Link
               to="/knowledge-base"
               className={`navbar-link-item ${isActive('/knowledge-base')}`}
             >
               🧠 Knowledge Base
             </Link>
+
+            <Link
+              to="/prd-generator"
+              className={`navbar-link-item ${isActive('/prd-generator')}`}
+            >
+              📄 PRD Generator
+            </Link>
+
+            <Link
+              to="/upload/feedback"
+              className={`navbar-link-item ${isActive('/upload/feedback')}`}
+            >
+              ✍️ Submit Feedback
+            </Link>
           </>
         )}
-
-        <Link
-          to="/upload/feedback"
-          className={`navbar-link-item ${isActive('/upload/feedback')}`}
-        >
-          ✍️ Submit Feedback
-        </Link>
       </div>
 
       <div className="navbar-user-profile">

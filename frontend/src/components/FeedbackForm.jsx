@@ -48,7 +48,7 @@ const FeedbackForm = () => {
     };
 
     try {
-      const response = await api.post('/ingest/feedback', payload);
+      const response = await api.post('/api/ingest/feedback', payload);
       if (response.data.success) {
         setResult(response.data.data);
         // Clear form fields

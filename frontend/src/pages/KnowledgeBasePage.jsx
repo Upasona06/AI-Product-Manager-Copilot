@@ -161,7 +161,7 @@ const KnowledgeBasePage = () => {
       {/* Header */}
       <div className="kb-header">
         <div className="header-meta">
-          <h1>🧠 Knowledge Base</h1>
+          <h1>🧠 Knowledge Base & RAG Engine</h1>
           <p className="project-token">
             Semantic search across all processed feedback, feature requests, and prioritized features
           </p>

@@ -49,7 +49,7 @@ const PrioritizationPage = () => {
         sort_order: sortOrder
       });
 
-      const response = await api.get(`/prioritize/results?${queryParams.toString()}`);
+      const response = await api.get(`/api/prioritize/results?${queryParams.toString()}`);
       if (response.data.success) {
         setFeatures(response.data.data.results);
         setTotalRecords(response.data.data.total);
@@ -92,7 +92,7 @@ const PrioritizationPage = () => {
     setError(null);
     setSuccessMsg(null);
     try {
-      const response = await api.post('/prioritize/run', { 
+      const response = await api.post('/api/prioritize/run', { 
         project_id: user.project_id,
         force: true 
       });
@@ -138,7 +138,7 @@ const PrioritizationPage = () => {
       {/* Page Header */}
       <div className="page-header flex-header">
         <div>
-          <h1>AI Prioritization & Business Impact Analysis</h1>
+          <h1>Prioritization & Business Impact Analysis</h1>
           <p>Consolidated product feature backlog evaluated via RICE, MoSCoW, ROI, and Business Value frameworks.</p>
         </div>
         
@@ -153,7 +153,7 @@ const PrioritizationPage = () => {
               <span className="spinner-mini"></span>
               Analyzing Backlog...
             </>
-          ) : "🤖 Run AI Prioritization"}
+          ) : "🤖 Run Prioritization"}
         </button>
       </div>
 

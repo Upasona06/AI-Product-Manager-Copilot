@@ -16,7 +16,6 @@ from routes.classify_routes import classify_bp
 from routes.aggregate_routes import aggregate_bp
 from routes.prioritize_routes import prioritize_bp
 from routes.rag_routes import rag_bp
-
 # Import Context Retrieval
 from context_service import retrieve_context
 
@@ -37,8 +36,7 @@ def create_app(config_class=None):
 
     # Configure CORS to allow frontend requests
     frontend_origin = app.config.get("FRONTEND_ORIGIN", "http://localhost:5173")
-    CORS(app, resources={r"/api/*": {"origins": [frontend_origin]}})
-
+    CORS(app, resources={r"/api/*": {"origins": [frontend_origin, "http://localhost:5173", "http://localhost:5176"]}}, supports_credentials=True)
     # Register Blueprints
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(ingest_bp, url_prefix="/api/ingest")
@@ -48,28 +46,28 @@ def create_app(config_class=None):
     app.register_blueprint(prioritize_bp, url_prefix="/api/prioritize")
     app.register_blueprint(rag_bp, url_prefix="/api/rag")
 
+    @app.route("/api/test")
+    def test():
+        return {"message":"Backend working"}
+
     # ======================================================
     # MODULE 7 - KNOWLEDGE BASE & RAG ENGINE
     # Context Retrieval API
     # ======================================================
-
     @app.route("/api/context/<query>", methods=["GET"])
     def context(query):
         try:
             result = retrieve_context(query)
-
             return jsonify({
                 "success": True,
                 "query": query,
                 "context": result
             })
-
         except Exception as e:
             return jsonify({
                 "success": False,
                 "error": str(e)
             }), 500
-
     # Global Error Handlers
     @app.errorhandler(400)
     def bad_request(error):

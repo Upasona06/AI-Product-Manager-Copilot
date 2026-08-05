@@ -10,9 +10,12 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import UploadCSVPage from './pages/UploadCSVPage';
 import FeedbackFormPage from './pages/FeedbackFormPage';
-import PrioritizationPage from './pages/PrioritizationPage';
 import StatusPage from './pages/StatusPage';
+import ClassificationPage from './pages/ClassificationPage';
+import AggregationPage from './pages/AggregationPage';
+import PrioritizationPage from './pages/PrioritizationPage';
 import KnowledgeBasePage from './pages/KnowledgeBasePage';
+import PRDGeneratorPage from './pages/PRDGeneratorPage';
 
 function App() {
   return (
@@ -20,6 +23,7 @@ function App() {
       <Router>
         <div className="app-shell">
           <Navbar />
+
           <main className="main-content-layout">
             <Routes>
               {/* Public Routes */}
@@ -52,6 +56,22 @@ function App() {
                 }
               />
               <Route
+                path="/classify"
+                element={
+                  <ProtectedRoute allowedRoles={['product_manager']}>
+                    <ClassificationPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/aggregate"
+                element={
+                  <ProtectedRoute allowedRoles={['product_manager']}>
+                    <AggregationPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/prioritization"
                 element={
                   <ProtectedRoute allowedRoles={['product_manager']}>
@@ -67,8 +87,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
-
+              <Route
+                path="/prd-generator"
+                element={
+                  <ProtectedRoute allowedRoles={['product_manager']}>
+                    <PRDGeneratorPage />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Protected Combined Routes (PM & Customer) */}
               <Route
@@ -80,7 +106,7 @@ function App() {
                 }
               />
 
-              {/* Root redirects to dashboard (PM) or form (Customer) inside login redirect logic */}
+              {/* Root redirects to login */}
               <Route path="/" element={<Navigate to="/login" replace />} />
 
               {/* Fallback */}

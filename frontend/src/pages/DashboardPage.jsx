@@ -22,7 +22,7 @@ const DashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       // 1. Fetch processing results for project
-      const resultsRes = await api.get(`/process/results?project_id=${user.project_id}&page_size=10`);
+      const resultsRes = await api.get(`/api/process/results?project_id=${user.project_id}&page_size=10`);
       if (resultsRes.data.success) {
         setRecentFeedbacks(resultsRes.data.data.results);
       }
@@ -63,7 +63,7 @@ const DashboardPage = () => {
     setPipelineStatusMsg("Initiating Pipeline...");
     
     try {
-      const response = await api.post('/process/run', { project_id: user.project_id });
+      const response = await api.post('/api/process/run', { project_id: user.project_id });
       if (response.data.success) {
         const { job_id, pending_count } = response.data.data;
         if (pending_count === 0) {
