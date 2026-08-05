@@ -46,7 +46,7 @@ const RegisterPage = () => {
     setSuccess(false);
 
     try {
-      const response = await api.post('/auth/register', formData);
+      const response = await api.post('/api/auth/register', formData);
       if (response.data.success) {
         setSuccess(true);
         setTimeout(() => {

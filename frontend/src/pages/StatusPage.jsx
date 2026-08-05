@@ -15,7 +15,7 @@ const StatusPage = () => {
   const fetchStatusRecords = async () => {
     setLoading(true);
     try {
-      const response = await api.get(`/process/results?project_id=${user.project_id}&page=${page}&page_size=${pageSize}`);
+      const response = await api.get(`/api/process/results?project_id=${user.project_id}&page=${page}&page_size=${pageSize}`);
       if (response.data.success) {
         setRecords(response.data.data.results);
         setTotalRecords(response.data.data.total);

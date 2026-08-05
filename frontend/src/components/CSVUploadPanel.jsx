@@ -78,7 +78,7 @@ const CSVUploadPanel = () => {
     formData.append('project_id', user.project_id);
 
     try {
-      const response = await api.post('/ingest/csv', formData, {
+      const response = await api.post('/api/ingest/csv', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

@@ -27,7 +27,7 @@ function KnowledgeBasePage() {
 
   return (
     <div style={{ padding: "30px" }}>
-      <h1>🧠 Module 7 - Knowledge Base & RAG Engine</h1>
+      <h1>🧠  Knowledge Base & RAG Engine</h1>
 
       <p>
         Search the knowledge base using Semantic Search and Context Retrieval.

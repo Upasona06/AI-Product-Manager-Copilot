@@ -66,7 +66,7 @@ const AggregationPage = () => {
   // ─── Fetch Clusters ─────────────────────────────────────
   const fetchClusters = async (currentPage = 1) => {
     try {
-      let url = `/aggregate/clusters?project_id=${user.project_id}&page=${currentPage}&page_size=${pageSize}&sort_by=${sortBy}`;
+      let url = `/api/aggregate/clusters?project_id=${user.project_id}&page=${currentPage}&page_size=${pageSize}&sort_by=${sortBy}`;
       if (filterImportance) url += `&importance=${encodeURIComponent(filterImportance)}`;
       if (filterTrend) url += `&trend=${encodeURIComponent(filterTrend)}`;
 
@@ -84,7 +84,7 @@ const AggregationPage = () => {
   // ─── Fetch Stats ────────────────────────────────────────
   const fetchStats = async () => {
     try {
-      const res = await api.get(`/aggregate/stats?project_id=${user.project_id}`);
+      const res = await api.get(`/api/aggregate/stats?project_id=${user.project_id}`);
       if (res.data.success) {
         setStats(res.data.data);
       }
@@ -96,7 +96,7 @@ const AggregationPage = () => {
   // ─── Fetch Cluster Detail ──────────────────────────────
   const fetchClusterDetail = async (aggregateId) => {
     try {
-      const res = await api.get(`/aggregate/clusters/${aggregateId}`);
+      const res = await api.get(`/api/aggregate/clusters/${aggregateId}`);
       if (res.data.success) {
         setExpandedDetail(res.data.data);
       }
@@ -126,7 +126,7 @@ const AggregationPage = () => {
     setError(null);
 
     try {
-      const res = await api.post('/aggregate/run', { project_id: user.project_id });
+      const res = await api.post('/api/aggregate/run', { project_id: user.project_id });
       if (res.data.success) {
         const { job_id, feature_request_count } = res.data.data;
         if (feature_request_count === 0) {
@@ -137,7 +137,7 @@ const AggregationPage = () => {
           // Poll for completion
           const pollInterval = setInterval(async () => {
             try {
-              const statusRes = await api.get(`/aggregate/status/${job_id}`);
+              const statusRes = await api.get(`/api/aggregate/status/${job_id}`);
               if (statusRes.data.success) {
                 const jobData = statusRes.data.data;
                 if (jobData.status === 'completed') {
@@ -189,7 +189,7 @@ const AggregationPage = () => {
     return (
       <div className="loader-container">
         <div className="spinner"></div>
-        <p>Loading Feature Aggregation Intelligence...</p>
+        <p>Loading Aggregation Intelligence...</p>
       </div>
     );
   }
@@ -199,9 +199,9 @@ const AggregationPage = () => {
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-meta">
-          <h1>🔗 Feature Request Aggregation</h1>
+          <h1>🔗 Aggregation</h1>
           <p className="project-token">
-            AI-powered semantic clustering of customer feature requests
+            Semantic clustering of customer requests
           </p>
         </div>
         <button
@@ -210,7 +210,7 @@ const AggregationPage = () => {
           disabled={aggregating}
           id="run-aggregation-btn"
         >
-          {aggregating ? 'Aggregating...' : '🧬 Run Feature Aggregation'}
+          {aggregating ? 'Aggregating...' : '🧬 Run Aggregation'}
         </button>
       </div>
 
@@ -305,8 +305,8 @@ const AggregationPage = () => {
           {clusters.length === 0 ? (
             <div className="empty-state glass-panel">
               <p>
-                No feature clusters yet. First run <strong>AI Classification</strong> (Module 4),
-                then click <strong>"Run Feature Aggregation"</strong> to cluster feature requests.
+                No aggregated features yet. Run the classification pipeline first (Module 4),
+                then click <strong>"Run Aggregation"</strong> to cluster feature requests.
               </p>
             </div>
           ) : (

@@ -33,7 +33,7 @@ const LoginPage = () => {
     setError(null);
 
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/api/auth/login', { email, password });
       if (response.data.success) {
         const { access_token, user_id, role, project_id } = response.data.data;
         login(access_token, { user_id, email, role, project_id });
@@ -42,7 +42,8 @@ const LoginPage = () => {
       }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || "Network error. Please try again.");
+      const errMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Network error. Please try again.";
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
