@@ -15,9 +15,8 @@ from routes.process_routes import process_bp
 from routes.classify_routes import classify_bp
 from routes.aggregate_routes import aggregate_bp
 from routes.prioritize_routes import prioritize_bp
-from routes.rag_routes import rag_bp
-# Import Context Retrieval
-from context_service import retrieve_context
+from routes.prd_routes import prd_bp
+from routes.assistant_routes import assistant_bp
 
 def create_app(config_class=None):
     app = Flask(__name__)
@@ -44,30 +43,13 @@ def create_app(config_class=None):
     app.register_blueprint(classify_bp, url_prefix="/api/classify")
     app.register_blueprint(aggregate_bp, url_prefix="/api/aggregate")
     app.register_blueprint(prioritize_bp, url_prefix="/api/prioritize")
-    app.register_blueprint(rag_bp, url_prefix="/api/rag")
+    app.register_blueprint(prd_bp, url_prefix="/api/prd")
+    app.register_blueprint(assistant_bp, url_prefix="/api/assistant")
 
     @app.route("/api/test")
     def test():
         return {"message":"Backend working"}
 
-    # ======================================================
-    # MODULE 7 - KNOWLEDGE BASE & RAG ENGINE
-    # Context Retrieval API
-    # ======================================================
-    @app.route("/api/context/<query>", methods=["GET"])
-    def context(query):
-        try:
-            result = retrieve_context(query)
-            return jsonify({
-                "success": True,
-                "query": query,
-                "context": result
-            })
-        except Exception as e:
-            return jsonify({
-                "success": False,
-                "error": str(e)
-            }), 500
     # Global Error Handlers
     @app.errorhandler(400)
     def bad_request(error):
