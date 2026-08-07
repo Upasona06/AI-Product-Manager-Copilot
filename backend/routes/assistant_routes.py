@@ -26,13 +26,21 @@ def chat_assistant():
             "error": "Forbidden: Only product managers can interact with the AI Assistant."
         }), 403
 
+    from services.gemini_service import GEMINI_API_KEY, ask_gemini
+    if not GEMINI_API_KEY:
+        return jsonify({
+            "success": False,
+            "error": "GEMINI_API_KEY missing"
+        }), 400
+
     data = request.get_json() or {}
-    message = data.get("message", "").strip()
+    message = data.get("query") or data.get("message") or ""
+    message = message.strip()
 
     if not message:
         return jsonify({
             "success": False,
-            "error": "Missing message content."
+            "error": "Empty query"
         }), 400
 
     # Specific pre-defined answer for user message example
@@ -49,25 +57,10 @@ def chat_assistant():
         )
         return jsonify({
             "success": True,
-            "reply": reply_text
+            "reply": reply_text,
+            "answer": reply_text
         }), 200
 
-    api_key = current_app.config.get("GEMINI_API_KEY")
-    if not api_key:
-        reply_text = (
-            "I am currently running in offline mode. Please configure `GEMINI_API_KEY` in the backend environment "
-            "to enable real-time AI product management responses.\n\n"
-            "Here is a fallback recommendation based on your query: Ensure user feedback categories are properly aggregated "
-            "using the Module 5 Aggregation Pipeline to identify core pain points."
-        )
-        return jsonify({
-            "success": True,
-            "reply": reply_text
-        }), 200
-
-    # Call Gemini API to generate response
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-    
     system_instruction = (
         "You are an expert AI Product Manager Assistant inside the PM Copilot SaaS application. "
         "Your role is to help analyze customer feedback, prioritize features, estimate business impact, "
@@ -75,36 +68,21 @@ def chat_assistant():
         "Provide detailed, actionable, and structured advice in clean Markdown format."
     )
 
-    prompt = f"{system_instruction}\n\nUser Question: {message}\nAssistant Reply:"
-    
-    payload = {
-        "contents": [{
-            "parts": [{
-                "text": prompt
-            }]
-        }]
-    }
-
     try:
-        req_data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(
-            url,
-            data=req_data,
-            headers={"Content-Type": "application/json"},
-            method="POST"
+        reply_text = ask_gemini(
+            prompt=f"User Question: {message}\nAssistant Reply:",
+            system_instruction=system_instruction
         )
-        with urllib.request.urlopen(req, timeout=30) as response:
-            res_body = json.loads(response.read().decode('utf-8'))
-            reply_text = res_body["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as ex:
         logger.error("Gemini API call failed for AI Assistant: %s", str(ex))
         return jsonify({
             "success": False,
-            "error": "Failed to generate AI Assistant response using Gemini API.",
+            "error": "Gemini failure: Failed to generate AI Assistant response.",
             "details": str(ex)
         }), 500
 
     return jsonify({
         "success": True,
-        "reply": reply_text
+        "reply": reply_text,
+        "answer": reply_text
     }), 200

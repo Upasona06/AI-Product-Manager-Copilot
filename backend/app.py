@@ -3,6 +3,9 @@ app.py — Flask application factory entrypoint
 """
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
+print("Gemini Key Loaded:", bool(os.getenv("GEMINI_API_KEY")))
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
@@ -35,12 +38,13 @@ def create_app(config_class=None):
 
     # Configure CORS to allow frontend requests
     frontend_origin = app.config.get("FRONTEND_ORIGIN", "http://localhost:5173")
-    CORS(app, resources={r"/api/*": {"origins": [frontend_origin, "http://localhost:5173", "http://localhost:5176"]}}, supports_credentials=True)
+    CORS(app, resources={r"/api/*": {"origins": [frontend_origin, "http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5176", "http://127.0.0.1:5176"]}}, supports_credentials=True)
     # Register Blueprints
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(ingest_bp, url_prefix="/api/ingest")
     app.register_blueprint(process_bp, url_prefix="/api/process")
     app.register_blueprint(classify_bp, url_prefix="/api/classify")
+    app.register_blueprint(classify_bp, url_prefix="/api/classification", name="classification_bp")
     app.register_blueprint(aggregate_bp, url_prefix="/api/aggregate")
     app.register_blueprint(prioritize_bp, url_prefix="/api/prioritize")
     app.register_blueprint(prd_bp, url_prefix="/api/prd")
