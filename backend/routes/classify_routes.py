@@ -113,9 +113,10 @@ def run_classification():
         stats = pipeline.run(project_id=project_id)
 
         # Fetch newly classified feedback results to return them in 'data'
-        results = ClassifiedFeedback.query.filter_by(
-            project_id=project_id
-        ).order_by(ClassifiedFeedback.classified_at.desc()).limit(stats.get("classified", 0)).all()
+        query_results = ClassifiedFeedback.query
+        if project_id:
+            query_results = query_results.filter_by(project_id=project_id)
+        results = query_results.order_by(ClassifiedFeedback.classified_at.desc()).limit(stats.get("classified", 0)).all()
 
         serialized = []
         for clf in results:
@@ -219,12 +220,8 @@ def get_classification_results():
         }), 400
 
     # Pagination
-    try:
-        page = int(request.args.get("page", 1))
-        page_size = int(request.args.get("page_size", 20))
-    except ValueError:
-        page = 1
-        page_size = 20
+    page_param = request.args.get("page")
+    page_size_param = request.args.get("page_size")
 
     # Build query
     query = ClassifiedFeedback.query.filter_by(project_id=project_id)
@@ -240,12 +237,23 @@ def get_classification_results():
 
     total = query.count()
 
-    results = (
-        query.order_by(ClassifiedFeedback.classified_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-        .all()
-    )
+    if page_param or page_size_param:
+        try:
+            page = int(page_param or 1)
+            page_size = int(page_size_param or 20)
+        except ValueError:
+            page = 1
+            page_size = 20
+        results = (
+            query.order_by(ClassifiedFeedback.classified_at.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+            .all()
+        )
+    else:
+        page = 1
+        page_size = total
+        results = query.order_by(ClassifiedFeedback.classified_at.desc()).all()
 
     # Join with processed_feedback for original text context
     serialized = []

@@ -52,6 +52,16 @@ const Navbar = () => {
               🕵️ Processed Status
             </Link>
 
+
+            <Link
+              to="/classify"
+              className={`navbar-link-item ${isActive('/classify')}`}
+            >
+              🤖 AI Classify
+            </Link>
+
+
+
             <Link
               to="/prioritization"
               className={`navbar-link-item ${isActive('/prioritization')}`}

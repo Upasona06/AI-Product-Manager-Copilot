@@ -194,20 +194,18 @@ class ClassificationPipeline:
         )
         duration_ms = int((time.time() - start_time) * 1000)
 
-        # Parse the JSON response
+        # Safely parse the JSON response
         response_text = response_text.strip()
 
-        # Clean potential markdown fences
-        if response_text.startswith("```"):
-            lines = response_text.split("\n")
-            # Remove first and last lines if they are fences
-            if lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines and lines[-1].strip() == "```":
-                lines = lines[:-1]
-            response_text = "\n".join(lines)
+        # Find the first '{' and the last '}' to extract valid JSON content
+        start_idx = response_text.find('{')
+        end_idx = response_text.rfind('}')
+        if start_idx != -1 and end_idx != -1:
+            json_str = response_text[start_idx:end_idx+1]
+        else:
+            json_str = response_text
 
-        parsed = json.loads(response_text)
+        parsed = json.loads(json_str)
 
         # Validate and sanitize the response
         result = self._validate_response(parsed)
@@ -231,19 +229,50 @@ class ClassificationPipeline:
         Validate and sanitize the parsed JSON response from Gemini.
         Ensures all fields conform to expected types and constraints.
         """
-        # Category validation
-        category = parsed.get("category", "Complaint")
-        if category not in VALID_CATEGORIES:
-            # Attempt fuzzy match
-            category_lower = category.lower()
-            matched = False
-            for valid_cat in VALID_CATEGORIES:
-                if valid_cat.lower() in category_lower or category_lower in valid_cat.lower():
-                    category = valid_cat
-                    matched = True
-                    break
-            if not matched:
-                category = "Complaint"  # Safe fallback
+        # Category validation and mapping
+        raw_category = parsed.get("category")
+        if not raw_category:
+            category = "Complaint"
+        else:
+            category = str(raw_category).strip()
+            # Standardize and map common variations to valid categories
+            cat_map = {
+                "bug report": "Bug",
+                "bug reports": "Bug",
+                "bug": "Bug",
+                "defect": "Bug",
+                "issue": "Bug",
+                "error": "Bug",
+                "feature request": "Feature Request",
+                "feature requests": "Feature Request",
+                "feature": "Feature Request",
+                "complaint": "Complaint",
+                "complaints": "Complaint",
+                "improvement": "Improvement",
+                "improvements": "Improvement",
+                "enhancement": "Improvement",
+                "suggestion": "Improvement",
+                "praise": "Improvement",
+                "question": "Improvement",
+                "pricing issue": "Complaint",
+                "performance issue": "Bug",
+                "ui issue": "Improvement",
+                "security concern": "Bug",
+            }
+            mapped_cat = cat_map.get(category.lower())
+            if mapped_cat:
+                category = mapped_cat
+            elif category not in VALID_CATEGORIES:
+                # Attempt fuzzy match
+                category_lower = category.lower()
+                matched = False
+                for valid_cat in VALID_CATEGORIES:
+                    if valid_cat.lower() in category_lower or category_lower in valid_cat.lower():
+                        category = valid_cat
+                        matched = True
+                        break
+                if not matched:
+                    category = "Complaint"  # Safe fallback
 
         # Confidence score
         confidence = float(parsed.get("confidence_score", 0.5))
@@ -348,6 +377,9 @@ class ClassificationPipeline:
                     classification_metadata=metadata,
                     classification_status="classified",
                 )
+
+                # Delete any existing classified feedback for this processed ID to prevent unique constraint violation
+                ClassifiedFeedback.query.filter_by(processed_feedback_id=feedback.processed_id).delete()
 
                 db.session.add(classified_rec)
 
