@@ -1,7 +1,7 @@
 """
 services/classification_pipeline.py — Module 4 NLP Classification & Theme Extraction
 
-Uses Google Gemini to classify processed feedback into 9 categories and extract
+Uses Google Gemini to classify processed feedback into 4 categories and extract
 topics, themes, sentiments, keywords, pain points, and customer intent.
 """
 
@@ -11,11 +11,10 @@ import time
 import uuid
 from datetime import datetime, timezone
 
-import google.generativeai as genai
-
 from database.db import db
 from models.processed_feedback import ProcessedFeedback
 from models.classified_feedback import ClassifiedFeedback
+from services.gemini_service import ask_gemini, GEMINI_API_KEY
 
 
 # ──────────────────────────────────────────────────────────────
@@ -23,15 +22,10 @@ from models.classified_feedback import ClassifiedFeedback
 # ──────────────────────────────────────────────────────────────
 
 VALID_CATEGORIES = [
-    "Bug Report",
+    "Bug",
     "Feature Request",
     "Complaint",
-    "Praise",
-    "Question",
-    "Pricing Issue",
-    "Performance Issue",
-    "UI Issue",
-    "Security Concern",
+    "Improvement",
 ]
 
 VALID_SENTIMENTS = ["Positive", "Negative", "Neutral", "Mixed"]
@@ -42,15 +36,10 @@ You analyze product feedback and extract structured insights.
 Your task is to analyze the provided feedback text and return a JSON object with the following fields:
 
 1. **category** (string): Classify into exactly ONE of these categories:
-   - "Bug Report" — Software defect, error, crash, malfunction
+   - "Bug" — Software defect, error, crash, malfunction, UI/performance bug
    - "Feature Request" — New capability, enhancement, addition desired
-   - "Complaint" — General dissatisfaction, frustration expression
-   - "Praise" — Positive feedback, compliment, appreciation
-   - "Question" — Inquiry, help request, clarification needed
-   - "Pricing Issue" — Cost concern, billing problem, subscription issue
-   - "Performance Issue" — Slow speed, lag, resource consumption, timeout
-   - "UI Issue" — Interface problem, design flaw, usability issue, layout bug
-   - "Security Concern" — Security vulnerability, privacy issue, data breach worry
+   - "Complaint" — General dissatisfaction, frustration expression, pricing issue, complaint
+   - "Improvement" — Enhancing existing features, optimization, tweaks, improvement
 
 2. **confidence_score** (float): Your confidence in the classification (0.0 to 1.0)
 
@@ -71,10 +60,10 @@ Your task is to analyze the provided feedback text and return a JSON object with
 10. **summary** (string): A 1-2 sentence concise summary of the feedback
 
 IMPORTANT RULES:
-- Return ONLY valid JSON. No markdown, no code fences, no explanation text.
+- Return ONLY valid JSON. No markdown, no explanation text.
 - All string values must be properly escaped.
 - Arrays must contain at least 1 item.
-- The category MUST be exactly one of the 9 listed categories.
+- The category MUST be exactly one of: Bug, Feature Request, Complaint, Improvement.
 - The sentiment MUST be exactly one of: Positive, Negative, Neutral, Mixed.
 """
 
@@ -89,8 +78,8 @@ class ClassificationPipeline:
     """
 
     def __init__(self):
-        self.api_key = os.getenv("GEMINI_API_KEY")
-        self.model_name = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+        self.api_key = GEMINI_API_KEY
+        self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
         self.prompt_version = os.getenv("CLASSIFICATION_PROMPT_VERSION", "1.0.0")
         self.batch_size = int(os.getenv("CLASSIFICATION_BATCH_SIZE", 10))
 
@@ -99,19 +88,6 @@ class ClassificationPipeline:
                 "GEMINI_API_KEY is not set in environment variables. "
                 "Please add it to your .env file."
             )
-
-        # Configure Gemini SDK
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel(
-            model_name=self.model_name,
-            system_instruction=SYSTEM_INSTRUCTION,
-            generation_config=genai.GenerationConfig(
-                temperature=0.2,
-                top_p=0.8,
-                max_output_tokens=2048,
-                response_mime_type="application/json",
-            ),
-        )
 
     # ──────────────────────────────────────────────────────────
     # Fetch Unclassified Records
@@ -211,40 +187,36 @@ class ClassificationPipeline:
         prompt = self.build_prompt(feedback)
         start_time = time.time()
 
-        response = self.model.generate_content(prompt)
+        response_text = ask_gemini(
+            prompt=prompt,
+            system_instruction=SYSTEM_INSTRUCTION,
+            json_mode=True
+        )
         duration_ms = int((time.time() - start_time) * 1000)
 
-        # Parse the JSON response
-        response_text = response.text.strip()
+        # Safely parse the JSON response
+        response_text = response_text.strip()
 
-        # Clean potential markdown fences
-        if response_text.startswith("```"):
-            lines = response_text.split("\n")
-            # Remove first and last lines if they are fences
-            if lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines and lines[-1].strip() == "```":
-                lines = lines[:-1]
-            response_text = "\n".join(lines)
+        # Find the first '{' and the last '}' to extract valid JSON content
+        start_idx = response_text.find('{')
+        end_idx = response_text.rfind('}')
+        if start_idx != -1 and end_idx != -1:
+            json_str = response_text[start_idx:end_idx+1]
+        else:
+            json_str = response_text
 
-        parsed = json.loads(response_text)
+        parsed = json.loads(json_str)
 
         # Validate and sanitize the response
         result = self._validate_response(parsed)
         result["duration_ms"] = duration_ms
 
         # Extract token usage if available
-        token_usage = {}
-        if hasattr(response, "usage_metadata") and response.usage_metadata:
-            usage = response.usage_metadata
-            token_usage = {
-                "prompt_tokens": getattr(usage, "prompt_token_count", 0),
-                "completion_tokens": getattr(
-                    usage, "candidates_token_count", 0
-                ),
-                "total_tokens": getattr(usage, "total_token_count", 0),
-            }
-        result["token_usage"] = token_usage
+        result["token_usage"] = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+        }
 
         return result
 
@@ -257,19 +229,50 @@ class ClassificationPipeline:
         Validate and sanitize the parsed JSON response from Gemini.
         Ensures all fields conform to expected types and constraints.
         """
-        # Category validation
-        category = parsed.get("category", "Complaint")
-        if category not in VALID_CATEGORIES:
-            # Attempt fuzzy match
-            category_lower = category.lower()
-            matched = False
-            for valid_cat in VALID_CATEGORIES:
-                if valid_cat.lower() in category_lower or category_lower in valid_cat.lower():
-                    category = valid_cat
-                    matched = True
-                    break
-            if not matched:
-                category = "Complaint"  # Safe fallback
+        # Category validation and mapping
+        raw_category = parsed.get("category")
+        if not raw_category:
+            category = "Complaint"
+        else:
+            category = str(raw_category).strip()
+            # Standardize and map common variations to valid categories
+            cat_map = {
+                "bug report": "Bug",
+                "bug reports": "Bug",
+                "bug": "Bug",
+                "defect": "Bug",
+                "issue": "Bug",
+                "error": "Bug",
+                "feature request": "Feature Request",
+                "feature requests": "Feature Request",
+                "feature": "Feature Request",
+                "complaint": "Complaint",
+                "complaints": "Complaint",
+                "improvement": "Improvement",
+                "improvements": "Improvement",
+                "enhancement": "Improvement",
+                "suggestion": "Improvement",
+                "praise": "Improvement",
+                "question": "Improvement",
+                "pricing issue": "Complaint",
+                "performance issue": "Bug",
+                "ui issue": "Improvement",
+                "security concern": "Bug",
+            }
+            mapped_cat = cat_map.get(category.lower())
+            if mapped_cat:
+                category = mapped_cat
+            elif category not in VALID_CATEGORIES:
+                # Attempt fuzzy match
+                category_lower = category.lower()
+                matched = False
+                for valid_cat in VALID_CATEGORIES:
+                    if valid_cat.lower() in category_lower or category_lower in valid_cat.lower():
+                        category = valid_cat
+                        matched = True
+                        break
+                if not matched:
+                    category = "Complaint"  # Safe fallback
 
         # Confidence score
         confidence = float(parsed.get("confidence_score", 0.5))
@@ -374,6 +377,9 @@ class ClassificationPipeline:
                     classification_metadata=metadata,
                     classification_status="classified",
                 )
+
+                # Delete any existing classified feedback for this processed ID to prevent unique constraint violation
+                ClassifiedFeedback.query.filter_by(processed_feedback_id=feedback.processed_id).delete()
 
                 db.session.add(classified_rec)
 

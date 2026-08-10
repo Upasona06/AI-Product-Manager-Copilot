@@ -52,6 +52,16 @@ const Navbar = () => {
               🕵️ Processed Status
             </Link>
 
+
+            <Link
+              to="/classify"
+              className={`navbar-link-item ${isActive('/classify')}`}
+            >
+              🤖 AI Classify
+            </Link>
+
+
+
             <Link
               to="/prioritization"
               className={`navbar-link-item ${isActive('/prioritization')}`}
@@ -60,18 +70,19 @@ const Navbar = () => {
             </Link>
 
             <Link
-              to="/knowledge-base"
-              className={`navbar-link-item ${isActive('/knowledge-base')}`}
-            >
-              🧠 Knowledge Base
-            </Link>
-
-            <Link
               to="/prd-generator"
               className={`navbar-link-item ${isActive('/prd-generator')}`}
             >
               📄 PRD Generator
             </Link>
+
+            <Link
+              to="/assistant"
+              className={`navbar-link-item ${isActive('/assistant')}`}
+            >
+              💬 AI Assistant
+            </Link>
+
 
             <Link
               to="/upload/feedback"

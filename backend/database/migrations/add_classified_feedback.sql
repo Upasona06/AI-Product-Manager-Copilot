@@ -33,15 +33,10 @@ CREATE TABLE IF NOT EXISTS classified_feedback (
     -- =========================================================
     ai_category                 VARCHAR(100)    NOT NULL
                                     CHECK (ai_category IN (
-                                        'Bug Report',
+                                        'Bug',
                                         'Feature Request',
                                         'Complaint',
-                                        'Praise',
-                                        'Question',
-                                        'Pricing Issue',
-                                        'Performance Issue',
-                                        'UI Issue',
-                                        'Security Concern'
+                                        'Improvement'
                                     )),
 
     ai_confidence_score         FLOAT           NOT NULL DEFAULT 0.0

@@ -1,609 +1,851 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
-import api from '../services/api';
-
-const CATEGORY_COLORS = {
-  'Bug Report': '#ef4444',
-  'Feature Request': '#8b5cf6',
-  'Complaint': '#f97316',
-  'Praise': '#22c55e',
-  'Question': '#3b82f6',
-  'Pricing Issue': '#eab308',
-  'Performance Issue': '#ec4899',
-  'UI Issue': '#06b6d4',
-  'Security Concern': '#dc2626',
-};
-
-const SENTIMENT_COLORS = {
-  'Positive': '#22c55e',
-  'Negative': '#ef4444',
-  'Neutral': '#94a3b8',
-  'Mixed': '#f59e0b',
-};
-
-const CATEGORY_ICONS = {
-  'Bug Report': '🐛',
-  'Feature Request': '✨',
-  'Complaint': '😤',
-  'Praise': '⭐',
-  'Question': '❓',
-  'Pricing Issue': '💰',
-  'Performance Issue': '⚡',
-  'UI Issue': '🎨',
-  'Security Concern': '🔒',
-};
+import React, { useState, useEffect, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+import api from "../services/api";
 
 const ClassificationPage = () => {
   const { user } = useContext(AuthContext);
 
-  // Pipeline state
-  const [classifying, setClassifying] = useState(false);
-  const [classifyMsg, setClassifyMsg] = useState(null);
+  // Loading and action state
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
 
-  // Results state
-  const [results, setResults] = useState([]);
-  const [totalResults, setTotalResults] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(15);
-
-  // Stats state
-  const [stats, setStats] = useState(null);
-
-  // Filters
-  const [filterCategory, setFilterCategory] = useState('');
-  const [filterSentiment, setFilterSentiment] = useState('');
+  // Main data states
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [metrics, setMetrics] = useState({
+    total: 0,
+    bug: 0,
+    feature: 0,
+    complaint: 0,
+    improvement: 0
+  });
 
   // UI state
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [expandedRow, setExpandedRow] = useState(null);
-  const [activeTab, setActiveTab] = useState('results');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [selectedFeedback, setSelectedFeedback] = useState(null);
+  const [hoveredRow, setHoveredRow] = useState(null);
+  const [runHovered, setRunHovered] = useState(false);
 
-  // ─── Fetch Classification Results ───────────────────────
-  const fetchResults = async (currentPage = 1) => {
+  // Filters state
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [sentiment, setSentiment] = useState("");
+  const [priority, setPriority] = useState("");
+
+  // Sorting state
+  const [sortBy, setSortBy] = useState("confidence");
+  const [sortOrder, setSortOrder] = useState("desc");
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const pageSize = 15;
+
+  // Helper matching functions for robust category categorization
+  const isBug = (cat) => {
+    const c = cat?.toLowerCase();
+    return c === "bug" || c === "bug report" || c === "bug reports" || c === "bug_report";
+  };
+  const isFeature = (cat) => {
+    const c = cat?.toLowerCase();
+    return c === "feature" || c === "feature request" || c === "feature requests" || c === "feature_request";
+  };
+  const isComplaint = (cat) => {
+    const c = cat?.toLowerCase();
+    return c === "complaint" || c === "complaints";
+  };
+  const isImprovement = (cat) => {
+    const c = cat?.toLowerCase();
+    return c === "improvement" || c === "improvements";
+  };
+
+  const getCategoryLabel = (cat) => {
+    if (isBug(cat)) return "Bug Report";
+    if (isFeature(cat)) return "Feature Request";
+    if (isComplaint(cat)) return "Complaint";
+    if (isImprovement(cat)) return "Improvement";
+    return cat || "N/A";
+  };
+
+  const fetchClassificationData = async () => {
+    if (!user?.project_id) return;
+    setLoading(true);
+    setError("");
     try {
-      let url = `/api/classify/results?project_id=${user.project_id}&page=${currentPage}&page_size=${pageSize}`;
-      if (filterCategory) url += `&category=${encodeURIComponent(filterCategory)}`;
-      if (filterSentiment) url += `&sentiment=${encodeURIComponent(filterSentiment)}`;
+      const response = await api.get(
+        `/api/classification/results?project_id=${user.project_id}`
+      );
 
-      const res = await api.get(url);
-      if (res.data.success) {
-        setResults(res.data.data.results);
-        setTotalResults(res.data.data.total);
+      if (response.data.success) {
+        const rawData = Array.isArray(response.data.data)
+          ? response.data.data
+          : (response.data.data?.results || []);
+
+        const mappedData = rawData.map(i => ({
+          ...i,
+          category: i.category || i.ai_category || "",
+          confidence: i.confidence !== undefined ? i.confidence : (i.ai_confidence_score !== undefined ? i.ai_confidence_score : 0),
+          sentiment: i.sentiment || i.ai_sentiment || "Neutral",
+          feedback_text: i.feedback_text || i.clean_text || i.original_description || i.feedback || ""
+        }));
+
+        // Exclude general and other categories to restrict output strictly to the 4 categories
+        const filtered = mappedData.filter(i =>
+          isBug(i.category) ||
+          isFeature(i.category) ||
+          isComplaint(i.category) ||
+          isImprovement(i.category)
+        );
+
+        setFeedbacks(filtered);
+
+        setMetrics({
+          total: filtered.length,
+          bug: filtered.filter(i => isBug(i.category)).length,
+          feature: filtered.filter(i => isFeature(i.category)).length,
+          complaint: filtered.filter(i => isComplaint(i.category)).length,
+          improvement: filtered.filter(i => isImprovement(i.category)).length
+        });
       }
     } catch (err) {
-      console.error('Failed to fetch classification results:', err);
-      setError('Failed to load classification results.');
+      console.error("Full fetch classification error response:", err);
+      if (err.response) {
+        setError(err.response.data?.error || err.response.data?.message || "Server Error: Failed to fetch classification results.");
+      } else if (err.request) {
+        setError("Network Error: Unable to fetch classification results. Please check if backend service is running.");
+      } else {
+        setError(err.message || "Server Error: Failed to fetch classification results.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ─── Fetch Classification Stats ─────────────────────────
-  const fetchStats = async () => {
-    try {
-      const res = await api.get(`/api/classify/stats?project_id=${user.project_id}`);
-      if (res.data.success) {
-        setStats(res.data.data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch classification stats:', err);
-    }
-  };
-
-  // ─── Initial Load ───────────────────────────────────────
   useEffect(() => {
-    if (user && user.project_id) {
-      Promise.all([fetchResults(1), fetchStats()]).finally(() => setLoading(false));
-    }
+    fetchClassificationData();
   }, [user]);
 
-  // ─── Refetch on filter/page change ──────────────────────
-  useEffect(() => {
-    if (user && user.project_id) {
-      fetchResults(page);
-    }
-  }, [page, filterCategory, filterSentiment]);
-
-  // ─── Run Classification Pipeline ────────────────────────
   const handleRunClassification = async () => {
-    setClassifying(true);
-    setClassifyMsg('Starting AI Classification Pipeline...');
-    setError(null);
+    if (!user?.project_id) return;
+    setRunning(true);
+    setError("");
+    setSuccess("");
 
     try {
-      const res = await api.post('/api/classify/run', { project_id: user.project_id });
-      if (res.data.success) {
-        const { job_id, unclassified_count } = res.data.data;
-        if (unclassified_count === 0) {
-          setClassifyMsg('All feedback has already been classified. No new items to process.');
-        } else {
-          setClassifyMsg(`Classification running in background. Job ID: ${job_id}. Classifying ${unclassified_count} items...`);
+      const response = await api.post(
+        "/api/classification/run",
+        { project_id: user.project_id }
+      );
 
-          // Poll for completion
-          const pollInterval = setInterval(async () => {
-            try {
-              const statusRes = await api.get(`/api/classify/status/${job_id}`);
-              if (statusRes.data.success) {
-                const jobData = statusRes.data.data;
-                if (jobData.status === 'completed') {
-                  clearInterval(pollInterval);
-                  setClassifyMsg(
-                    `Classification complete! ${jobData.classified_count} classified, ${jobData.failed_count} failed.`
-                  );
-                  fetchResults(1);
-                  fetchStats();
-                  setPage(1);
-                } else if (jobData.status === 'failed') {
-                  clearInterval(pollInterval);
-                  setClassifyMsg(`Classification failed: ${jobData.error}`);
-                }
-              }
-            } catch (pollErr) {
-              console.error('Poll error:', pollErr);
-            }
-          }, 3000);
-
-          // Safety: stop polling after 5 minutes
-          setTimeout(() => clearInterval(pollInterval), 300000);
-        }
+      if (response.data.success) {
+        setSuccess(response.data.message || "AI Classification completed successfully");
+        fetchClassificationData();
+      } else {
+        setError(response.data.error || "Classification failed");
       }
     } catch (err) {
-      console.error(err);
-      setClassifyMsg(null);
-      setError(err.response?.data?.error || 'Failed to trigger classification pipeline.');
+      console.error("Full run classification error response:", err);
+      if (err.response) {
+        setError(err.response.data?.error || err.response.data?.message || "Classification failed");
+      } else if (err.request) {
+        setError("Network Error: Unable to connect to the AI service. Please verify the server is running and accessible.");
+      } else {
+        setError(err.message || "Unable to connect AI service");
+      }
     } finally {
-      setClassifying(false);
+      setRunning(false);
     }
   };
 
-  // ─── Pagination ─────────────────────────────────────────
-  const totalPages = Math.ceil(totalResults / pageSize);
+  // Sorting handler
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortOrder("desc");
+    }
+    setPage(1);
+  };
 
-  if (loading) {
-    return (
-      <div className="loader-container">
-        <div className="spinner"></div>
-        <p>Loading Classification Intelligence...</p>
-      </div>
-    );
-  }
+  const renderSortIndicator = (field) => {
+    if (sortBy !== field) return null;
+    return sortOrder === "asc" ? " ▲" : " ▼";
+  };
+
+  // Filter local logic
+  const filteredData = feedbacks.filter(item => {
+    const searchMatch = (item.feedback_text || item.feedback || "")
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    const categoryMatch =
+      category === "" ||
+      (category === "Bug Reports" && isBug(item.category)) ||
+      (category === "Feature Requests" && isFeature(item.category)) ||
+      (category === "Complaints" && isComplaint(item.category)) ||
+      (category === "Improvements" && isImprovement(item.category));
+
+    const sentimentMatch =
+      sentiment === "" ||
+      (item.sentiment || "").toLowerCase() === sentiment.toLowerCase();
+
+    const priorityMatch =
+      priority === "" ||
+      (item.priority || "").toLowerCase() === priority.toLowerCase();
+
+    return searchMatch && categoryMatch && sentimentMatch && priorityMatch;
+  });
+
+  // Sort local logic
+  const sortedData = [...filteredData].sort((a, b) => {
+    let valA = a[sortBy];
+    let valB = b[sortBy];
+
+    if (sortBy === "confidence") {
+      valA = parseFloat(a.confidence) || 0;
+      valB = parseFloat(b.confidence) || 0;
+    } else {
+      valA = (valA || "").toString().toLowerCase();
+      valB = (valB || "").toString().toLowerCase();
+    }
+
+    if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+    if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const paginatedData = sortedData.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
+
+  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
+
+  // Auto-adjust page when totalPages shrinks due to filters
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [totalPages, page]);
+
+  // Inline Style Declarations
+  const containerStyle = {
+    padding: "2.5rem 1.5rem",
+    maxWidth: "1400px",
+    width: "100%",
+    margin: "0 auto",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    minHeight: "100vh",
+    color: "#f3f4f6"
+  };
+
+  const headerStyle = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "2.5rem",
+    gap: "1rem",
+    flexWrap: "wrap"
+  };
+
+  const headerMetaStyle = {
+    display: "flex",
+    flexDirection: "column"
+  };
+
+  const titleStyle = {
+    fontSize: "2.2rem",
+    fontWeight: 700,
+    letterSpacing: "-0.03em",
+    marginBottom: "0.5rem",
+    background: "linear-gradient(to right, #ffffff, #c084fc)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    margin: 0
+  };
+
+  const subtitleStyle = {
+    color: "#9ca3af",
+    fontSize: "1.05rem",
+    margin: 0
+  };
+
+  const actionBtnStyle = (disabled) => ({
+    background: "#7c3aed",
+    color: "#fff",
+    border: "none",
+    padding: "0.8rem 1.5rem",
+    borderRadius: "6px",
+    fontWeight: 600,
+    fontSize: "0.95rem",
+    cursor: disabled ? "not-allowed" : "pointer",
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "0.5rem",
+    opacity: disabled ? 0.6 : 1,
+    boxShadow: disabled ? "none" : "0 0 15px rgba(124, 58, 237, 0.3)"
+  });
+
+  const alertStyle = (type) => {
+    const isSuccess = type === "success";
+    return {
+      padding: "1rem 1.25rem",
+      borderRadius: "6px",
+      fontSize: "0.95rem",
+      marginBottom: "1.5rem",
+      lineHeight: 1.4,
+      borderLeft: "4px solid " + (isSuccess ? "#10b981" : "#ef4444"),
+      background: isSuccess ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
+      color: isSuccess ? "#a7f3d0" : "#fca5a5"
+    };
+  };
+
+  const metricsGridStyle = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: "1.5rem",
+    marginBottom: "2.5rem"
+  };
+
+  const glassPanelStyle = {
+    background: "rgba(255, 255, 255, 0.03)",
+    backdropFilter: "blur(16px)",
+    WebkitBackdropFilter: "blur(16px)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    borderRadius: "12px",
+    padding: "2rem",
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+  };
+
+  const metricCardStyle = {
+    ...glassPanelStyle,
+    display: "flex",
+    alignItems: "center",
+    gap: "1.25rem",
+    padding: "1.5rem"
+  };
+
+  const metricIconStyle = {
+    fontSize: "2.2rem",
+    background: "rgba(255, 255, 255, 0.05)",
+    width: "60px",
+    height: "60px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "12px",
+    border: "1px solid rgba(255, 255, 255, 0.08)"
+  };
+
+  const metricDataStyle = {
+    display: "flex",
+    flexDirection: "column"
+  };
+
+  const metricValueStyle = {
+    fontSize: "1.8rem",
+    fontWeight: 700,
+    lineHeight: "1.2",
+    color: "#f3f4f6"
+  };
+
+  const metricLabelStyle = {
+    fontSize: "0.85rem",
+    color: "#9ca3af",
+    fontWeight: "500"
+  };
+
+  const filterToolbarStyle = {
+    background: "rgba(255, 255, 255, 0.03)",
+    backdropFilter: "blur(16px)",
+    WebkitBackdropFilter: "blur(16px)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    borderRadius: "12px",
+    padding: "1.25rem",
+    marginBottom: "2rem",
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "1rem",
+    alignItems: "center"
+  };
+
+  const filtersContainerStyle = {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "1rem",
+    alignItems: "center",
+    width: "100%"
+  };
+
+  const inputStyle = {
+    background: "rgba(10, 10, 18, 0.6)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    borderRadius: "6px",
+    color: "#f3f4f6",
+    padding: "0.75rem 1rem",
+    fontSize: "0.95rem",
+    outline: "none",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    flex: "1 1 200px"
+  };
+
+  const selectStyle = {
+    background: "rgba(10, 10, 18, 0.6)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    borderRadius: "6px",
+    color: "#f3f4f6",
+    padding: "0.75rem 1rem",
+    fontSize: "0.95rem",
+    outline: "none",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    flex: "1 1 180px",
+    cursor: "pointer"
+  };
+
+  const tableResponsiveStyle = {
+    width: "100%",
+    overflowX: "auto",
+    background: "rgba(255, 255, 255, 0.03)",
+    backdropFilter: "blur(16px)",
+    WebkitBackdropFilter: "blur(16px)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    borderRadius: "12px",
+    padding: "1.5rem"
+  };
+
+  const tableStyle = {
+    width: "100%",
+    borderCollapse: "collapse",
+    textAlign: "left",
+    fontSize: "0.92rem"
+  };
+
+  const thStyle = {
+    padding: "1rem 1.25rem",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+    fontWeight: "600",
+    color: "#9ca3af",
+    background: "rgba(255, 255, 255, 0.02)",
+    textTransform: "uppercase",
+    fontSize: "0.8rem",
+    letterSpacing: "0.05em"
+  };
+
+  const tdStyle = {
+    padding: "1rem 1.25rem",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+    color: "#f3f4f6",
+    verticalAlign: "middle"
+  };
+
+  const badgeStyle = {
+    display: "inline-block",
+    padding: "0.25rem 0.6rem",
+    borderRadius: "4px",
+    fontSize: "0.78rem",
+    fontWeight: "600",
+    textTransform: "uppercase"
+  };
+
+  const getCategoryBadgeStyle = (cat) => {
+    if (isBug(cat)) return { background: "rgba(239, 68, 68, 0.15)", color: "#f87171" };
+    if (isFeature(cat)) return { background: "rgba(59, 130, 246, 0.15)", color: "#60a5fa" };
+    if (isComplaint(cat)) return { background: "rgba(245, 158, 11, 0.15)", color: "#fbbf24" };
+    if (isImprovement(cat)) return { background: "rgba(16, 185, 129, 0.15)", color: "#34d399" };
+    return { background: "rgba(255, 255, 255, 0.08)", color: "#9ca3af" };
+  };
+
+  const getPriorityBadgeStyle = (priority) => {
+    const p = priority?.toLowerCase();
+    if (p === "high" || p === "critical") return { background: "rgba(239, 68, 68, 0.15)", color: "#f87171" };
+    if (p === "medium") return { background: "rgba(245, 158, 11, 0.15)", color: "#fbbf24" };
+    if (p === "low") return { background: "rgba(16, 185, 129, 0.15)", color: "#34d399" };
+    return { background: "rgba(255, 255, 255, 0.08)", color: "#9ca3af" };
+  };
+
+  const getSentimentBadgeStyle = (sentiment) => {
+    const s = sentiment?.toLowerCase();
+    if (s === "positive") return { background: "rgba(16, 185, 129, 0.15)", color: "#34d399" };
+    if (s === "negative") return { background: "rgba(239, 68, 68, 0.15)", color: "#f87171" };
+    if (s === "neutral") return { background: "rgba(255, 255, 255, 0.08)", color: "#9ca3af" };
+    if (s === "mixed") return { background: "rgba(245, 158, 11, 0.15)", color: "#fbbf24" };
+    return { background: "rgba(255, 255, 255, 0.08)", color: "#9ca3af" };
+  };
+
+  const formatConfidence = (conf) => {
+    if (conf === undefined || conf === null) return "0%";
+    const num = parseFloat(conf);
+    if (isNaN(num)) return "0%";
+    if (num <= 1.0) return `${Math.round(num * 100)}%`;
+    return `${Math.round(num)}%`;
+  };
+
+  const paginationBarStyle = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: "1.5rem"
+  };
+
+  const paginationBtnStyle = (disabled) => ({
+    background: "rgba(255, 255, 255, 0.03)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    color: "#f3f4f6",
+    padding: "0.5rem 1rem",
+    borderRadius: "6px",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontWeight: 500,
+    opacity: disabled ? 0.4 : 1,
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+  });
+
+  const paginationInfoStyle = {
+    fontSize: "0.88rem",
+    color: "#9ca3af"
+  };
+
+  const modalOverlayStyle = {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: "rgba(10, 10, 18, 0.8)",
+    backdropFilter: "blur(8px)",
+    WebkitBackdropFilter: "blur(8px)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000
+  };
+
+  const modalContentStyle = {
+    background: "#0f0f1a",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    borderRadius: "12px",
+    padding: "2rem",
+    width: "100%",
+    maxWidth: "500px",
+    boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+    color: "#f3f4f6"
+  };
 
   return (
-    <div className="dashboard-container page-layout">
+    <div style={containerStyle}>
       {/* Header */}
-      <div className="dashboard-header">
-        <div className="header-meta">
-          <h1>🧠 Classification & Theme Extraction</h1>
-
+      <div style={headerStyle}>
+        <div style={headerMetaStyle}>
+          <h1 style={titleStyle}>AI Feedback Classification</h1>
+          <p style={subtitleStyle}>
+            Automatically classify customer feedback using AI into Bug Reports, Feature Requests, Complaints and Improvements.
+          </p>
         </div>
+
         <button
           onClick={handleRunClassification}
-          className="action-btn run-pipeline-btn"
-          disabled={classifying}
+          disabled={running}
+          onMouseEnter={() => setRunHovered(true)}
+          onMouseLeave={() => setRunHovered(false)}
+          style={{
+            ...actionBtnStyle(running),
+            background: runHovered && !running ? "#9333ea" : "#7c3aed",
+            boxShadow: runHovered && !running ? "0 0 25px rgba(124, 58, 237, 0.5)" : "0 0 15px rgba(124, 58, 237, 0.3)"
+          }}
         >
-          {classifying ? 'Classifying...' : '🤖 Run Classification'}
+          {running ? "Running..." : "🤖 Run AI Classification"}
         </button>
       </div>
 
-      {/* Status Messages */}
-      {classifyMsg && (
-        <div className="alert-message info-alert">
-          <strong>Classification Status: </strong> {classifyMsg}
+      {/* Messages */}
+      {success && (
+        <div style={alertStyle("success")}>
+          ✅ {success}
         </div>
       )}
+
       {error && (
-        <div className="alert-message error-alert">
-          <strong>Error: </strong> {error}
+        <div style={alertStyle("error")}>
+          ❌ {error}
         </div>
       )}
 
-      {/* Tab Navigation */}
-      <div className="classify-tabs">
-        <button
-          className={`classify-tab ${activeTab === 'results' ? 'active' : ''}`}
-          onClick={() => setActiveTab('results')}
-        >
-          📋 Classification Results
-        </button>
-        <button
-          className={`classify-tab ${activeTab === 'analytics' ? 'active' : ''}`}
-          onClick={() => setActiveTab('analytics')}
-        >
-          📊 Analytics Dashboard
-        </button>
-      </div>
-
-      {/* ─── Results Tab ───────────────────────────────── */}
-      {activeTab === 'results' && (
-        <div className="classify-results-section">
-          {/* Filters */}
-          <div className="classify-filters glass-panel">
-            <div className="filter-group">
-              <label>Category:</label>
-              <select
-                value={filterCategory}
-                onChange={(e) => { setFilterCategory(e.target.value); setPage(1); }}
-              >
-                <option value="">All Categories</option>
-                {Object.keys(CATEGORY_ICONS).map(cat => (
-                  <option key={cat} value={cat}>{CATEGORY_ICONS[cat]} {cat}</option>
-                ))}
-              </select>
-            </div>
-            <div className="filter-group">
-              <label>Sentiment:</label>
-              <select
-                value={filterSentiment}
-                onChange={(e) => { setFilterSentiment(e.target.value); setPage(1); }}
-              >
-                <option value="">All Sentiments</option>
-                <option value="Positive">😊 Positive</option>
-                <option value="Negative">😠 Negative</option>
-                <option value="Neutral">😐 Neutral</option>
-                <option value="Mixed">🤔 Mixed</option>
-              </select>
-            </div>
-            <div className="filter-group">
-              <span className="result-count">{totalResults} results</span>
+      {/* Metrics Grid */}
+      <div style={metricsGridStyle}>
+        {[
+          { icon: "📂", label: "Total Feedback", value: metrics.total, color: "#c084fc" },
+          { icon: "🐞", label: "Bug Reports", value: metrics.bug, color: "#f87171" },
+          { icon: "💡", label: "Feature Requests", value: metrics.feature, color: "#60a5fa" },
+          { icon: "⚠️", label: "Complaints", value: metrics.complaint, color: "#fbbf24" },
+          { icon: "🚀", label: "Improvements", value: metrics.improvement, color: "#34d399" },
+        ].map((m, index) => (
+          <div key={index} style={metricCardStyle}>
+            <span style={{ ...metricIconStyle, color: m.color }}>{m.icon}</span>
+            <div style={metricDataStyle}>
+              <span style={metricValueStyle}>{m.value}</span>
+              <span style={metricLabelStyle}>{m.label}</span>
             </div>
           </div>
+        ))}
+      </div>
 
-          {/* Results Table */}
-          {results.length === 0 ? (
-            <div className="empty-state glass-panel">
-              <p>
-                No classified feedback yet. Run the preprocessing pipeline first (Module 3),
-                then click <strong>"Run Classification"</strong> to classify feedback.
-              </p>
-            </div>
-          ) : (
-            <div className="table-responsive glass-panel">
-              <table className="data-table classify-table">
-                <thead>
-                  <tr>
-                    <th>Subject</th>
-                    <th>AI Category</th>
-                    <th>Sentiment</th>
-                    <th>Confidence</th>
-                    <th>Keywords</th>
-                    <th>Weight</th>
-                    <th>Details</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.map((item) => (
-                    <React.Fragment key={item.classified_id}>
-                      <tr className={expandedRow === item.classified_id ? 'expanded-row' : ''}>
-                        <td>
-                          <div className="subject-text">
-                            {item.original_subject || 'N/A'}
-                          </div>
-                          <div className="description-preview">
-                            {item.ai_summary || (item.clean_text || '').substring(0, 80)}...
-                          </div>
-                        </td>
-                        <td>
-                          <span
-                            className="badge classify-category-badge"
-                            style={{
-                              backgroundColor: `${CATEGORY_COLORS[item.ai_category] || '#6b7280'}20`,
-                              color: CATEGORY_COLORS[item.ai_category] || '#6b7280',
-                              borderColor: CATEGORY_COLORS[item.ai_category] || '#6b7280',
-                            }}
-                          >
-                            {CATEGORY_ICONS[item.ai_category] || '📌'} {item.ai_category}
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className="badge classify-sentiment-badge"
-                            style={{
-                              backgroundColor: `${SENTIMENT_COLORS[item.ai_sentiment] || '#94a3b8'}20`,
-                              color: SENTIMENT_COLORS[item.ai_sentiment] || '#94a3b8',
-                              borderColor: SENTIMENT_COLORS[item.ai_sentiment] || '#94a3b8',
-                            }}
-                          >
-                            {item.ai_sentiment}
-                          </span>
-                          <div className="sentiment-score-bar">
-                            <div
-                              className="sentiment-score-fill"
-                              style={{
-                                width: `${Math.abs(item.ai_sentiment_score) * 50 + 50}%`,
-                                backgroundColor: item.ai_sentiment_score >= 0 ? '#22c55e' : '#ef4444',
-                              }}
-                            />
-                          </div>
-                        </td>
-                        <td>
-                          <div className="confidence-display">
-                            <div className="confidence-bar">
-                              <div
-                                className="confidence-fill"
-                                style={{ width: `${item.ai_confidence_score * 100}%` }}
-                              />
-                            </div>
-                            <span className="confidence-value">
-                              {(item.ai_confidence_score * 100).toFixed(0)}%
-                            </span>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="lemmas-chips">
-                            {(item.keywords || []).slice(0, 3).map((kw, idx) => (
-                              <span key={idx} className="lemma-chip keyword-chip">{kw}</span>
-                            ))}
-                            {(item.keywords || []).length > 3 && (
-                              <span className="lemma-more">+{item.keywords.length - 3}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td><strong>{item.weight}</strong></td>
-                        <td>
-                          <button
-                            className="expand-btn"
-                            onClick={() =>
-                              setExpandedRow(
-                                expandedRow === item.classified_id ? null : item.classified_id
-                              )
-                            }
-                          >
-                            {expandedRow === item.classified_id ? '▲' : '▼'}
-                          </button>
-                        </td>
-                      </tr>
+      {/* Filters Toolbar */}
+      <div style={filterToolbarStyle}>
+        <div style={filtersContainerStyle}>
+          <input
+            placeholder="Search feedback..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            style={inputStyle}
+          />
 
-                      {/* Expanded Details Row */}
-                      {expandedRow === item.classified_id && (
-                        <tr className="detail-row">
-                          <td colSpan="7">
-                            <div className="classify-detail-grid">
-                              {/* Themes */}
-                              <div className="detail-section">
-                                <h4>🎯 Themes</h4>
-                                <div className="detail-chips">
-                                  {(item.themes || []).map((th, idx) => (
-                                    <span key={idx} className="detail-chip theme-chip">{th}</span>
-                                  ))}
-                                  {(!item.themes || item.themes.length === 0) && (
-                                    <span className="no-data">No themes extracted</span>
-                                  )}
-                                </div>
-                              </div>
+          <select
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setPage(1);
+            }}
+            style={selectStyle}
+          >
+            <option value="">All Categories</option>
+            <option value="Bug Reports">Bug Reports</option>
+            <option value="Feature Requests">Feature Requests</option>
+            <option value="Complaints">Complaints</option>
+            <option value="Improvements">Improvements</option>
+          </select>
 
-                              {/* Topics */}
-                              <div className="detail-section">
-                                <h4>📂 Topics</h4>
-                                <div className="detail-chips">
-                                  {(item.topics || []).map((tp, idx) => (
-                                    <span key={idx} className="detail-chip topic-chip">{tp}</span>
-                                  ))}
-                                  {(!item.topics || item.topics.length === 0) && (
-                                    <span className="no-data">No topics extracted</span>
-                                  )}
-                                </div>
-                              </div>
+          <select
+            value={sentiment}
+            onChange={(e) => {
+              setSentiment(e.target.value);
+              setPage(1);
+            }}
+            style={selectStyle}
+          >
+            <option value="">All Sentiments</option>
+            <option value="Positive">Positive</option>
+            <option value="Neutral">Neutral</option>
+            <option value="Negative">Negative</option>
+            <option value="Mixed">Mixed</option>
+          </select>
 
-                              {/* Pain Points */}
-                              <div className="detail-section">
-                                <h4>🔥 Pain Points</h4>
-                                <div className="detail-chips">
-                                  {(item.pain_points || []).map((pp, idx) => (
-                                    <span key={idx} className="detail-chip pain-chip">{pp}</span>
-                                  ))}
-                                  {(!item.pain_points || item.pain_points.length === 0) && (
-                                    <span className="no-data">No pain points identified</span>
-                                  )}
-                                </div>
-                              </div>
+          <select
+            value={priority}
+            onChange={(e) => {
+              setPriority(e.target.value);
+              setPage(1);
+            }}
+            style={selectStyle}
+          >
+            <option value="">All Priorities</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+      </div>
 
-                              {/* Customer Intent */}
-                              <div className="detail-section">
-                                <h4>🎯 Customer Intent</h4>
-                                <p className="intent-text">
-                                  {item.customer_intent || 'Not determined'}
-                                </p>
-                              </div>
-
-                              {/* All Keywords */}
-                              <div className="detail-section full-width">
-                                <h4>🔑 All Keywords</h4>
-                                <div className="detail-chips">
-                                  {(item.keywords || []).map((kw, idx) => (
-                                    <span key={idx} className="detail-chip keyword-detail-chip">{kw}</span>
-                                  ))}
-                                </div>
-                              </div>
-
-                              {/* AI Summary */}
-                              {item.ai_summary && (
-                                <div className="detail-section full-width">
-                                  <h4>📝 AI Summary</h4>
-                                  <p className="ai-summary-text">{item.ai_summary}</p>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+      {/* Results */}
+      {loading ? (
+        <div style={{ ...glassPanelStyle, textAlign: "center", padding: "3rem" }}>
+          <h3 style={{ margin: 0, color: "#9ca3af" }}>Loading AI Classification...</h3>
+        </div>
+      ) : paginatedData.length === 0 ? (
+        <div style={{ ...glassPanelStyle, textAlign: "center", padding: "3rem" }}>
+          <h2 style={{ marginTop: 0, marginBottom: "0.5rem" }}>🤖 No classified feedback found</h2>
+          <p style={{ color: "#9ca3af", margin: 0 }}>
+            Upload customer feedback and run AI Classification.
+          </p>
+        </div>
+      ) : (
+        <div style={tableResponsiveStyle}>
+          <table style={tableStyle}>
+            <thead>
+              <tr>
+                <th
+                  style={{ ...thStyle, cursor: "pointer" }}
+                  onClick={() => handleSort("feedback_text")}
+                >
+                  Feedback {renderSortIndicator("feedback_text")}
+                </th>
+                <th
+                  style={{ ...thStyle, cursor: "pointer" }}
+                  onClick={() => handleSort("category")}
+                >
+                  Category {renderSortIndicator("category")}
+                </th>
+                <th
+                  style={{ ...thStyle, cursor: "pointer" }}
+                  onClick={() => handleSort("sentiment")}
+                >
+                  Sentiment {renderSortIndicator("sentiment")}
+                </th>
+                <th
+                  style={{ ...thStyle, cursor: "pointer" }}
+                  onClick={() => handleSort("priority")}
+                >
+                  Priority {renderSortIndicator("priority")}
+                </th>
+                <th
+                  style={{ ...thStyle, cursor: "pointer" }}
+                  onClick={() => handleSort("confidence")}
+                >
+                  Confidence {renderSortIndicator("confidence")}
+                </th>
+                <th style={thStyle}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedData.map((item, index) => (
+                <tr
+                  key={index}
+                  onMouseEnter={() => setHoveredRow(index)}
+                  onMouseLeave={() => setHoveredRow(null)}
+                  style={{
+                    background: hoveredRow === index ? "rgba(255, 255, 255, 0.02)" : "transparent",
+                    transition: "background 0.2s ease"
+                  }}
+                >
+                  <td style={{ ...tdStyle, maxWidth: "400px", wordBreak: "break-word" }}>
+                    {item.feedback_text || item.feedback}
+                  </td>
+                  <td style={tdStyle}>
+                    <span style={{ ...badgeStyle, ...getCategoryBadgeStyle(item.category) }}>
+                      {getCategoryLabel(item.category)}
+                    </span>
+                  </td>
+                  <td style={tdStyle}>
+                    <span style={{ ...badgeStyle, ...getSentimentBadgeStyle(item.sentiment) }}>
+                      {item.sentiment || "Neutral"}
+                    </span>
+                  </td>
+                  <td style={tdStyle}>
+                    <span style={{ ...badgeStyle, ...getPriorityBadgeStyle(item.priority) }}>
+                      {item.priority || "Medium"}
+                    </span>
+                  </td>
+                  <td style={{ ...tdStyle, fontWeight: "600", color: "#c084fc" }}>
+                    {formatConfidence(item.confidence)}
+                  </td>
+                  <td style={tdStyle}>
+                    <button
+                      onClick={() => setSelectedFeedback(item)}
+                      style={{
+                        background: "#7c3aed",
+                        color: "#fff",
+                        border: "none",
+                        padding: "0.5rem 1rem",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontSize: "0.85rem",
+                        fontWeight: "600",
+                        transition: "all 0.2s ease"
+                      }}
+                      onMouseEnter={(e) => { e.target.style.background = "#9333ea"; }}
+                      onMouseLeave={(e) => { e.target.style.background = "#7c3aed"; }}
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="pagination-controls">
+            <div style={paginationBarStyle}>
               <button
-                disabled={page <= 1}
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                className="action-btn"
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+                style={paginationBtnStyle(page === 1)}
               >
-                ← Previous
+                Previous
               </button>
-              <span className="page-info">
+              <span style={paginationInfoStyle}>
                 Page {page} of {totalPages}
               </span>
               <button
-                disabled={page >= totalPages}
-                onClick={() => setPage(p => p + 1)}
-                className="action-btn"
+                disabled={page === totalPages}
+                onClick={() => setPage(page + 1)}
+                style={paginationBtnStyle(page === totalPages)}
               >
-                Next →
+                Next
               </button>
             </div>
           )}
         </div>
       )}
 
-      {/* ─── Analytics Tab ─────────────────────────────── */}
-      {activeTab === 'analytics' && stats && (
-        <div className="classify-analytics-section">
-          {/* Summary Cards */}
-          <div className="metrics-grid">
-            <div className="metric-card glass-panel">
-              <span className="metric-icon">🧠</span>
-              <div className="metric-data">
-                <span className="metric-value">{stats.total_classified}</span>
-                <span className="metric-label">Total Classified</span>
+      {/* View Modal */}
+      {selectedFeedback && (
+        <div style={modalOverlayStyle} onClick={() => setSelectedFeedback(null)}>
+          <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ marginTop: 0, marginBottom: "1.5rem", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "0.75rem", fontSize: "1.3rem" }}>Feedback Details</h2>
+
+            <div style={{ marginBottom: "1.25rem" }}>
+              <label style={{ fontSize: "0.85rem", color: "#9ca3af", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>Feedback Text</label>
+              <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.05)", borderRadius: "6px", padding: "1rem", lineHeight: "1.5", fontSize: "0.95rem", maxHeight: "200px", overflowY: "auto" }}>
+                {selectedFeedback.feedback_text || selectedFeedback.feedback}
               </div>
             </div>
-            <div className="metric-card glass-panel">
-              <span className="metric-icon">📊</span>
-              <div className="metric-data">
-                <span className="metric-value">{(stats.avg_confidence_score * 100).toFixed(1)}%</span>
-                <span className="metric-label">Avg Confidence</span>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem", marginBottom: "1.5rem" }}>
+              <div>
+                <label style={{ fontSize: "0.85rem", color: "#9ca3af", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>Category</label>
+                <span style={{ ...badgeStyle, ...getCategoryBadgeStyle(selectedFeedback.category) }}>
+                  {getCategoryLabel(selectedFeedback.category)}
+                </span>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.85rem", color: "#9ca3af", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>Confidence</label>
+                <span style={{ fontSize: "1.1rem", fontWeight: 700, color: "#c084fc" }}>
+                  {formatConfidence(selectedFeedback.confidence)}
+                </span>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.85rem", color: "#9ca3af", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>Sentiment</label>
+                <span style={{ ...badgeStyle, ...getSentimentBadgeStyle(selectedFeedback.sentiment) }}>
+                  {selectedFeedback.sentiment || "Neutral"}
+                </span>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.85rem", color: "#9ca3af", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>Priority</label>
+                <span style={{ ...badgeStyle, ...getPriorityBadgeStyle(selectedFeedback.priority) }}>
+                  {selectedFeedback.priority || "Medium"}
+                </span>
               </div>
             </div>
-            <div className="metric-card glass-panel">
-              <span className="metric-icon">⚖️</span>
-              <div className="metric-data">
-                <span className="metric-value">{stats.total_weighted_submissions}</span>
-                <span className="metric-label">Total Weighted</span>
-              </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setSelectedFeedback(null)}
+                style={{
+                  background: "rgba(255, 255, 255, 0.05)",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  color: "#f3f4f6",
+                  padding: "0.6rem 1.2rem",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  transition: "all 0.3s ease"
+                }}
+                onMouseEnter={(e) => { e.target.style.background = "rgba(255, 255, 255, 0.1)"; }}
+                onMouseLeave={(e) => { e.target.style.background = "rgba(255, 255, 255, 0.05)"; }}
+              >
+                Close
+              </button>
             </div>
           </div>
-
-          {/* Category Distribution */}
-          <div className="analytics-grid">
-            <div className="analytics-card glass-panel">
-              <h3>📁 Category Distribution</h3>
-              <div className="distribution-list">
-                {Object.entries(stats.category_distribution)
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([cat, count]) => (
-                    <div key={cat} className="distribution-item">
-                      <div className="dist-label">
-                        <span className="dist-icon">{CATEGORY_ICONS[cat] || '📌'}</span>
-                        <span>{cat}</span>
-                      </div>
-                      <div className="dist-bar-container">
-                        <div
-                          className="dist-bar"
-                          style={{
-                            width: `${(count / Math.max(...Object.values(stats.category_distribution))) * 100}%`,
-                            backgroundColor: CATEGORY_COLORS[cat] || '#6b7280',
-                          }}
-                        />
-                      </div>
-                      <span className="dist-count">{count}</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-
-            <div className="analytics-card glass-panel">
-              <h3>😊 Sentiment Distribution</h3>
-              <div className="distribution-list">
-                {Object.entries(stats.sentiment_distribution)
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([sent, count]) => (
-                    <div key={sent} className="distribution-item">
-                      <div className="dist-label">
-                        <span>{sent}</span>
-                      </div>
-                      <div className="dist-bar-container">
-                        <div
-                          className="dist-bar"
-                          style={{
-                            width: `${(count / Math.max(...Object.values(stats.sentiment_distribution))) * 100}%`,
-                            backgroundColor: SENTIMENT_COLORS[sent] || '#94a3b8',
-                          }}
-                        />
-                      </div>
-                      <span className="dist-count">{count}</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Top Keywords & Themes */}
-          <div className="analytics-grid">
-            <div className="analytics-card glass-panel">
-              <h3>🔑 Top Keywords</h3>
-              <div className="tag-cloud">
-                {stats.top_keywords.map((item, idx) => (
-                  <span
-                    key={idx}
-                    className="cloud-tag"
-                    style={{
-                      fontSize: `${Math.max(0.75, Math.min(1.5, 0.75 + (item.count / (stats.top_keywords[0]?.count || 1)) * 0.75))}rem`,
-                      opacity: Math.max(0.5, item.count / (stats.top_keywords[0]?.count || 1)),
-                    }}
-                  >
-                    {item.keyword}
-                    <sup className="tag-count">{item.count}</sup>
-                  </span>
-                ))}
-                {stats.top_keywords.length === 0 && (
-                  <span className="no-data">No keywords extracted yet</span>
-                )}
-              </div>
-            </div>
-
-            <div className="analytics-card glass-panel">
-              <h3>🎯 Top Themes</h3>
-              <div className="theme-list">
-                {stats.top_themes.map((item, idx) => (
-                  <div key={idx} className="theme-item">
-                    <span className="theme-rank">#{idx + 1}</span>
-                    <span className="theme-name">{item.theme}</span>
-                    <span className="theme-count">{item.count} mentions</span>
-                  </div>
-                ))}
-                {stats.top_themes.length === 0 && (
-                  <span className="no-data">No themes extracted yet</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Top Pain Points */}
-          <div className="analytics-card glass-panel full-width-card">
-            <h3>🔥 Top Pain Points</h3>
-            <div className="pain-points-grid">
-              {stats.top_pain_points.map((item, idx) => (
-                <div key={idx} className="pain-point-card">
-                  <div className="pain-point-header">
-                    <span className="pain-point-rank">#{idx + 1}</span>
-                    <span className="pain-point-count">{item.count} reports</span>
-                  </div>
-                  <p className="pain-point-text">{item.pain_point}</p>
-                </div>
-              ))}
-              {stats.top_pain_points.length === 0 && (
-                <span className="no-data">No pain points identified yet</span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'analytics' && !stats && (
-        <div className="empty-state glass-panel">
-          <p>No analytics data available. Run the classification pipeline first.</p>
         </div>
       )}
     </div>

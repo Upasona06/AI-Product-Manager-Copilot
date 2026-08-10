@@ -27,10 +27,7 @@ class ClassifiedFeedback(db.Model):
 
     __table_args__ = (
         CheckConstraint(
-            "ai_category IN ("
-            "'Bug Report', 'Feature Request', 'Complaint', 'Praise', "
-            "'Question', 'Pricing Issue', 'Performance Issue', "
-            "'UI Issue', 'Security Concern')",
+            "ai_category IN ('Bug', 'Feature Request', 'Complaint', 'Improvement')",
             name="chk_clf_ai_category",
         ),
         CheckConstraint(
