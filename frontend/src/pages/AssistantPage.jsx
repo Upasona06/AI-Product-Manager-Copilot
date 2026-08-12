@@ -84,10 +84,14 @@ const AssistantPage = () => {
       }
     } catch (err) {
       console.error(err);
+      const resData = err.response?.data;
+      const backendError = resData 
+        ? `${resData.error || ""}${resData.details ? " Details: " + resData.details : ""}` 
+        : err.message || "Unknown error";
       const errorMsg = {
         id: `ai-err-${Date.now()}`,
         sender: 'ai',
-        text: "Sorry, I encountered an error. Please verify the backend is running and GEMINI_API_KEY is configured.",
+        text: `Sorry, I encountered an error: ${backendError}`,
         isError: true,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };

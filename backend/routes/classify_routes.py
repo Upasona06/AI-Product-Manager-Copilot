@@ -73,11 +73,6 @@ def run_classification():
         }), 403
 
     from services.gemini_service import GEMINI_API_KEY
-    if not GEMINI_API_KEY:
-        return jsonify({
-            "success": False,
-            "error": "GEMINI_API_KEY missing"
-        }), 400
 
     data = request.get_json() or {}
     project_id_str = data.get("project_id") or claims.get("project_id")
@@ -92,6 +87,14 @@ def run_classification():
                 "error": "Invalid project_id format."
             }), 400
 
+    # Reset stuck processing records
+    from models.raw_feedback import RawFeedback
+    try:
+        RawFeedback.query.filter_by(processing_status='processing').update({'processing_status': 'pending'})
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+
     # Count unclassified records
     query = ProcessedFeedback.query.filter_by(
         ready_for_classification=True
@@ -101,6 +104,32 @@ def run_classification():
         query = query.filter_by(project_id=project_id)
 
     unclassified_count = query.count()
+
+    if unclassified_count == 0:
+        # Check if there are raw feedback records that need processing
+        raw_query = RawFeedback.query.filter_by(processing_status='pending')
+        if project_id:
+            raw_query = raw_query.filter_by(project_id=project_id)
+        
+        if raw_query.count() > 0:
+            import threading
+            from services.processing_pipeline import ProcessingPipeline
+            
+            app = current_app._get_current_object()
+            def run_processing(app_obj):
+                with app_obj.app_context():
+                    try:
+                        proc_pipeline = ProcessingPipeline()
+                        proc_pipeline.run(project_id=project_id)
+                    except Exception as pe:
+                        app_obj.logger.error(f"Auto-preprocessing background task failed: {pe}")
+            
+            threading.Thread(target=run_processing, args=(app,)).start()
+            
+            return jsonify({
+                "success": False,
+                "error": "New feedback data is currently being processed in the background. Please wait a few seconds and click 'Run AI Classification' again."
+            }), 202
 
     if unclassified_count == 0:
         return jsonify({

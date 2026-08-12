@@ -87,7 +87,11 @@ const PRDGeneratorPage = () => {
       }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || "Gemini AI generation service failed. Check if API key is set.");
+      const resData = err.response?.data;
+      const backendError = resData
+        ? `${resData.error || ""}${resData.details ? " Details: " + resData.details : ""}`
+        : "Gemini AI generation service failed. Check if API key is set.";
+      setError(backendError);
     } finally {
       setGenerating(false);
     }

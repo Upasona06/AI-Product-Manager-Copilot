@@ -13,7 +13,8 @@ import uuid
 from datetime import datetime, timezone
 from collections import Counter
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from sqlalchemy import func
 
 from database.db import db
@@ -61,7 +62,7 @@ class AggregationPipeline:
 
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
-        self.model_name = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+        self.model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
         self.prompt_version = os.getenv("AGGREGATION_PROMPT_VERSION", "1.0.0")
 
         if not self.api_key:
@@ -70,18 +71,8 @@ class AggregationPipeline:
                 "Please add it to your .env file."
             )
 
-        # Configure Gemini SDK
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel(
-            model_name=self.model_name,
-            system_instruction=AGGREGATION_SYSTEM_INSTRUCTION,
-            generation_config=genai.GenerationConfig(
-                temperature=0.15,
-                top_p=0.8,
-                max_output_tokens=8192,
-                response_mime_type="application/json",
-            ),
-        )
+        # Configure Gemini Client (new SDK)
+        self.client = genai.Client(api_key=self.api_key)
 
     # ──────────────────────────────────────────────────────────
     # Fetch Feature Requests from Classified Feedback
@@ -154,7 +145,19 @@ class AggregationPipeline:
         prompt = self.build_prompt(feature_requests)
         start_time = time.time()
 
-        response = self.model.generate_content(prompt)
+        config = types.GenerateContentConfig(
+            temperature=0.15,
+            top_p=0.8,
+            max_output_tokens=8192,
+            response_mime_type="application/json",
+            system_instruction=AGGREGATION_SYSTEM_INSTRUCTION
+        )
+
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=prompt,
+            config=config
+        )
         duration_ms = int((time.time() - start_time) * 1000)
 
         # Parse JSON response

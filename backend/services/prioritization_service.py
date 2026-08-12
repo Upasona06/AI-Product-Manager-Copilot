@@ -161,9 +161,10 @@ class PrioritizationService:
 
     def _call_gemini_api(self, record: ProcessedFeedback) -> dict:
         """
-        Calls Gemini 1.5 Flash API to get structured prioritizations.
+        Calls Gemini API to get structured prioritizations.
         """
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.api_key}"
+        model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.api_key}"
         
         prompt = f"""You are an expert product manager and business analyst.
 Analyze the following feature request or customer feedback:

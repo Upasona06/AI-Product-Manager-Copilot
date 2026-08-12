@@ -51,9 +51,7 @@ def generate_prd():
             f"## 6. Success Metrics\n- Adoption rate > 50% in first month."
         )
     else:
-        import urllib.request
-        import json
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        from services.gemini_service import ask_gemini
 
         prompt = f"""You are an expert product manager. Write a comprehensive Product Requirement Document (PRD) for the following feature.
 Feature Name: {feature_name}
@@ -70,24 +68,8 @@ Format the PRD using clean markdown with the following sections:
 
 Do not include any other conversational text or markdown blocks besides the document markdown itself.
 """
-        payload = {
-            "contents": [{
-                "parts": [{
-                    "text": prompt
-                }]
-            }]
-        }
         try:
-            req_data = json.dumps(payload).encode('utf-8')
-            req = urllib.request.Request(
-                url,
-                data=req_data,
-                headers={"Content-Type": "application/json"},
-                method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=30) as response:
-                res_body = json.loads(response.read().decode('utf-8'))
-                prd_text = res_body["candidates"][0]["content"]["parts"][0]["text"]
+            prd_text = ask_gemini(prompt)
         except Exception as ex:
             logger.error("Gemini API call failed for PRD generation: %s", str(ex))
             return jsonify({

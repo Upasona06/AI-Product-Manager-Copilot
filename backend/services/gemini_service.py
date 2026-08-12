@@ -1,39 +1,37 @@
 import os
-import google.generativeai as genai
+from pathlib import Path
 from dotenv import load_dotenv
+from google import genai
 
-# Load env variables from .env
-load_dotenv()
-
-print("Gemini Key Loaded:", bool(os.getenv("GEMINI_API_KEY")))
+# Load env variables from project root .env
+env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path, override=True)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+print("Gemini Key Loaded:", bool(GEMINI_API_KEY))
 
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-
-# Initialize the Gemini model globally
-model = genai.GenerativeModel("gemini-1.5-flash")
+# Initialize the Gemini client (new SDK)
+gemini_model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 def ask_gemini(prompt, system_instruction=None, json_mode=False):
     """
-    Query Gemini AI with the given prompt.
+    Query Gemini AI with the given prompt using the new google-genai SDK.
     """
-    if not GEMINI_API_KEY:
+    if not GEMINI_API_KEY or not client:
         raise ValueError("GEMINI_API_KEY missing")
     
-    generation_config = {}
+    config = {}
+    if system_instruction:
+        config["system_instruction"] = system_instruction
     if json_mode:
-        generation_config["response_mime_type"] = "application/json"
-        
-    if system_instruction or json_mode:
-        local_model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            system_instruction=system_instruction,
-            generation_config=genai.GenerationConfig(**generation_config) if generation_config else None
-        )
-        response = local_model.generate_content(prompt)
-    else:
-        response = model.generate_content(prompt)
+        config["response_mime_type"] = "application/json"
+
+    response = client.models.generate_content(
+        model=gemini_model_name,
+        contents=prompt,
+        config=config if config else None
+    )
         
     return response.text
+

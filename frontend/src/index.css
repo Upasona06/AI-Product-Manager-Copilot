@@ -720,3 +720,382 @@ body {
     transform: translateY(0);
   }
 }
+
+/* ==========================================================================
+   Dashboard Visual Charts Styling
+   ========================================================================== */
+.dashboard-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chart-card {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+}
+
+.chart-card h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.chart-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.25rem;
+}
+
+.chart-content {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+  width: 100%;
+}
+
+.chart-content.vertical-center {
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: 1.25rem;
+}
+
+/* Donut Chart SVG styles */
+.svg-chart-container {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.circular-chart {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.circle-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.05);
+  stroke-width: 2.8;
+}
+
+.circle {
+  fill: none;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.3s ease, stroke-dashoffset 0.3s ease;
+}
+
+.segment-bug {
+  stroke: var(--color-error);
+}
+
+.segment-feature {
+  stroke: var(--accent-primary);
+}
+
+.segment-complaint {
+  stroke: var(--color-warning);
+}
+
+.segment-improvement {
+  stroke: var(--color-success);
+}
+
+.percentage-text {
+  fill: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 6.5px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+/* Legends */
+.chart-legend-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.legend-item:last-child {
+  border-bottom: none;
+}
+
+.legend-title-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-bug { background-color: var(--color-error); }
+.dot-feature { background-color: var(--accent-primary); }
+.dot-complaint { background-color: var(--color-warning); }
+.dot-improvement { background-color: var(--color-success); }
+
+.legend-title {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.legend-percentage {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Sentiment ratio stacked bar */
+.ratio-bar-container {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.ratio-bar {
+  display: flex;
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ratio-segment {
+  height: 100%;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.segment-pos { background-color: var(--color-success); }
+.segment-neu { background-color: var(--color-info); }
+.segment-mix { background-color: var(--color-warning); }
+.segment-neg { background-color: var(--color-error); }
+
+/* Progress list */
+.sentiment-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.sentiment-progress-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sentiment-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+.sentiment-progress-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 5px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fill-positive { background-color: var(--color-success); box-shadow: 0 0 8px rgba(16, 185, 129, 0.3); }
+.fill-neutral { background-color: var(--color-info); box-shadow: 0 0 8px rgba(59, 130, 246, 0.3); }
+.fill-mixed { background-color: var(--color-warning); box-shadow: 0 0 8px rgba(245, 158, 11, 0.3); }
+.fill-negative { background-color: var(--color-error); box-shadow: 0 0 8px rgba(239, 68, 68, 0.3); }
+
+/* ==========================================================================
+   Customer Feedback Portal Layout
+   ========================================================================== */
+.customer-portal-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 968px) {
+  .customer-portal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal-history-column {
+  padding: 2rem;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+  max-height: 600px;
+  padding-right: 0.5rem;
+}
+
+/* Custom Scrollbar for history list */
+.history-list::-webkit-scrollbar {
+  width: 6px;
+}
+.history-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.01);
+}
+.history-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.history-item {
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--border-radius-md);
+  transition: var(--transition-smooth);
+}
+
+.history-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.history-item-header h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.history-item-description {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.history-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Status Badges */
+.status-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge-pending {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.status-badge-processing {
+  color: var(--color-info);
+  background: var(--color-info-bg);
+}
+
+.status-badge-processed {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+
+.status-badge-duplicate {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+
+.status-badge-failed {
+  color: var(--color-error);
+  background: var(--color-error-bg);
+}
+
+.meta-info-chip {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.meta-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.history-loader, .empty-history-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+

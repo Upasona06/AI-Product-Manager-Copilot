@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import api from '../services/api';
 
-const FeedbackForm = () => {
+const FeedbackForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
     subject: '',
     description: '',
@@ -27,7 +27,7 @@ const FeedbackForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.subject.strip || !formData.subject.trim()) {
+    if (!formData.subject || !formData.subject.trim()) {
       setError("Subject is required.");
       return;
     }
@@ -62,6 +62,9 @@ const FeedbackForm = () => {
           product_version: '',
           sentiment_self_reported: ''
         });
+        if (onSuccess) {
+          onSuccess();
+        }
       } else {
         setError(response.data.error || "Submission failed.");
       }

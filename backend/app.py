@@ -3,8 +3,12 @@ app.py — Flask application factory entrypoint
 """
 
 import os
+from pathlib import Path
 from dotenv import load_dotenv
-load_dotenv()
+
+# Load .env from project root (parent of backend/)
+env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path=env_path, override=True)
 print("Gemini Key Loaded:", bool(os.getenv("GEMINI_API_KEY")))
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
@@ -133,4 +137,4 @@ if __name__ == "__main__":
     app = create_app()
     port = int(os.getenv("FLASK_PORT", 5000))
     host = os.getenv("FLASK_HOST", "0.0.0.0")
-    app.run(host=host, port=port, debug=app.config.get("DEBUG", True))
+    app.run(host=host, port=port, debug=app.config.get("DEBUG", True), use_reloader=False)

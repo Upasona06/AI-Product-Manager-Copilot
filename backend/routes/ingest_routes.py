@@ -10,6 +10,7 @@ import pandas as pd
 from database.db import db
 from services.ingestion_service import IngestionService
 from models.user import User
+from models.raw_feedback import RawFeedback
 
 ingest_bp = Blueprint("ingest_bp", __name__)
 
@@ -202,3 +203,21 @@ def check_status(feedback_id):
         "success": True,
         "data": status_data
     }), 200
+
+
+@ingest_bp.route("/my-feedback", methods=["GET"])
+@jwt_required()
+def get_user_feedback():
+    """Retrieve all raw feedback items submitted by the currently logged-in user."""
+    user_id = uuid.UUID(get_jwt_identity())
+    try:
+        records = RawFeedback.query.filter_by(user_id=user_id).order_by(RawFeedback.created_at.desc()).all()
+        return jsonify({
+            "success": True,
+            "data": [r.to_dict() for r in records]
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Failed to retrieve your feedback list: {str(e)}"
+        }), 500
