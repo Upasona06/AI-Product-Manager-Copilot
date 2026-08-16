@@ -1,0 +1,101 @@
+subject,description,priority,category,tags,sentiment_self_reported
+Dark mode toggle (Sample #1),A dark theme option should be added to reduce eye strain during night usage.,Low,Feature Request,"ui,accessibility",Positive
+Export to JSON format (Sample #2),Allow users to export tables and graphs directly to JSON.,Medium,Feature Request,"export,data",Neutral
+Dashboard loading slow (Sample #3),The dashboard takes over 21 seconds to load when fetching yearly metrics.,High,Improvement,"dashboard,performance",Negative
+Password reset link expired (Sample #4),"Password reset emails arrive 20 minutes late, causing them to be expired.",Critical,Bug,"auth,email",Negative
+Session timeout too short (Sample #5),"User session expires every 15 minutes, which is disruptive to workflows.",High,Improvement,"security,session",Negative
+Mobile app crash on logout (Sample #6),The Android application crashes immediately when the user logs out.,Critical,Bug,"mobile,crash",Negative
+Search results irrelevant (Sample #7),Full-text search results do not prioritize exact matches for user titles.,Medium,Improvement,"search,relevance",Negative
+Dark mode toggle (Sample #8),A dark theme option should be added to reduce eye strain during night usage.,Low,Feature Request,"ui,accessibility",Positive
+Integrate Slack login (Sample #9),Provide OAuth authentication option using Slack for easier login.,Medium,Feature Request,"auth,integration",Positive
+Support chat widget (Sample #10),Add an interactive support chat widget in the help center page.,Medium,Feature Request,"support,chat",Positive
+MFA configuration error (Sample #11),Setting up MFA with Duo Security gives a 500 error code during code verification.,Critical,Bug,"security,auth,mfa",Negative
+Notification settings toggle (Sample #12),Add granular toggle options for email vs. push notifications.,Low,Improvement,"settings,notifications",Neutral
+Profile picture crop tool (Sample #13),Add a cropping utility when uploading profile photos.,Low,Improvement,"profile,ui",Neutral
+Billing invoice receipt download (Sample #14),Invoice PDF downloads fail with a network error on the billing page.,High,Bug,"billing,finance",Negative
+Session timeout too short (Sample #15),"User session expires every 15 minutes, which is disruptive to workflows.",High,Improvement,"security,session",Negative
+Filter by date range in reports (Sample #16),The reporting tab needs custom start/end date selectors.,High,Feature Request,"reports,filters",Positive
+Filter by date range in reports (Sample #17),The reporting tab needs custom start/end date selectors.,High,Feature Request,"reports,filters",Positive
+Automated backup settings (Sample #18),Allow teams to schedule automated backups of their workspace data.,High,Feature Request,"backup,security",Positive
+Session timeout too short (Sample #19),"User session expires every 15 minutes, which is disruptive to workflows.",High,Improvement,"security,session",Negative
+Support chat widget (Sample #20),Add an interactive support chat widget in the help center page.,Medium,Feature Request,"support,chat",Positive
+Broken link in footer (Sample #21),The privacy policy link in the footer returns a 404 error page.,Medium,Bug,"ui,broken-link",Negative
+CSV import validation error (Sample #22),Importing user CSVs doesn't show descriptive errors for invalid columns.,High,Bug,"import,csv",Negative
+Mobile app crash on logout (Sample #23),The Android application crashes immediately when the user logs out.,Critical,Bug,"mobile,crash",Negative
+Password reset link expired (Sample #24),"Password reset emails arrive 20 minutes late, causing them to be expired.",Critical,Bug,"auth,email",Negative
+Dark mode toggle (Sample #25),A dark theme option should be added to reduce eye strain during night usage.,Low,Feature Request,"ui,accessibility",Positive
+API rate limit documentation (Sample #26),API documentation is missing details on rate limiting limits per tier.,Medium,Improvement,"api,documentation",Neutral
+Billing invoice receipt download (Sample #27),Invoice PDF downloads fail with a network error on the billing page.,High,Bug,"billing,finance",Negative
+API rate limit documentation (Sample #28),API documentation is missing details on rate limiting limits per tier.,Medium,Improvement,"api,documentation",Neutral
+Mobile app crash on logout (Sample #29),The Android application crashes immediately when the user logs out.,Critical,Bug,"mobile,crash",Negative
+Dashboard loading slow (Sample #30),The dashboard takes over 12 seconds to load when fetching yearly metrics.,High,Improvement,"dashboard,performance",Negative
+Integrate GitHub login (Sample #31),Provide OAuth authentication option using GitHub for easier login.,Medium,Feature Request,"auth,integration",Positive
+CSV import validation error (Sample #32),Importing user CSVs doesn't show descriptive errors for invalid columns.,High,Bug,"import,csv",Negative
+CSV import validation error (Sample #33),Importing user CSVs doesn't show descriptive errors for invalid columns.,High,Bug,"import,csv",Negative
+Password reset link expired (Sample #34),"Password reset emails arrive 20 minutes late, causing them to be expired.",Critical,Bug,"auth,email",Negative
+API rate limit documentation (Sample #35),API documentation is missing details on rate limiting limits per tier.,Medium,Improvement,"api,documentation",Neutral
+Session timeout too short (Sample #36),"User session expires every 15 minutes, which is disruptive to workflows.",High,Improvement,"security,session",Negative
+Filter by date range in reports (Sample #37),The reporting tab needs custom start/end date selectors.,High,Feature Request,"reports,filters",Positive
+MFA configuration error (Sample #38),Setting up MFA with Duo Security gives a 500 error code during code verification.,Critical,Bug,"security,auth,mfa",Negative
+Filter by date range in reports (Sample #39),The reporting tab needs custom start/end date selectors.,High,Feature Request,"reports,filters",Positive
+CSV import validation error (Sample #40),Importing user CSVs doesn't show descriptive errors for invalid columns.,High,Bug,"import,csv",Negative
+CSV import validation error (Sample #41),Importing user CSVs doesn't show descriptive errors for invalid columns.,High,Bug,"import,csv",Negative
+Keyboard shortcuts for navigation (Sample #42),Support keyboard shortcuts like 'G then D' to go to Dashboard.,Low,Feature Request,"accessibility,ui",Positive
+Integrate Google login (Sample #43),Provide OAuth authentication option using Google for easier login.,Medium,Feature Request,"auth,integration",Positive
+Filter by date range in reports (Sample #44),The reporting tab needs custom start/end date selectors.,High,Feature Request,"reports,filters",Positive
+Support chat widget (Sample #45),Add an interactive support chat widget in the help center page.,Medium,Feature Request,"support,chat",Positive
+Billing invoice receipt download (Sample #46),Invoice PDF downloads fail with a network error on the billing page.,High,Bug,"billing,finance",Negative
+Support chat widget (Sample #47),Add an interactive support chat widget in the help center page.,Medium,Feature Request,"support,chat",Positive
+Notification settings toggle (Sample #48),Add granular toggle options for email vs. push notifications.,Low,Improvement,"settings,notifications",Neutral
+Search results irrelevant (Sample #49),Full-text search results do not prioritize exact matches for user titles.,Medium,Improvement,"search,relevance",Negative
+Dashboard loading slow (Sample #50),The dashboard takes over 14 seconds to load when fetching yearly metrics.,High,Improvement,"dashboard,performance",Negative
+Keyboard shortcuts for navigation (Sample #51),Support keyboard shortcuts like 'G then D' to go to Dashboard.,Low,Feature Request,"accessibility,ui",Positive
+API rate limit documentation (Sample #52),API documentation is missing details on rate limiting limits per tier.,Medium,Improvement,"api,documentation",Neutral
+Filter by date range in reports (Sample #53),The reporting tab needs custom start/end date selectors.,High,Feature Request,"reports,filters",Positive
+PDF report header format (Sample #54),Company logo in exported PDF reports appears blurry and stretched.,Low,Improvement,"export,pdf,design",Negative
+MFA configuration error (Sample #55),Setting up MFA with Google Authenticator gives a 500 error code during code verification.,Critical,Bug,"security,auth,mfa",Negative
+Dark mode toggle (Sample #56),A dark theme option should be added to reduce eye strain during night usage.,Low,Feature Request,"ui,accessibility",Positive
+MFA configuration error (Sample #57),Setting up MFA with Authy gives a 500 error code during code verification.,Critical,Bug,"security,auth,mfa",Negative
+Filter by date range in reports (Sample #58),The reporting tab needs custom start/end date selectors.,High,Feature Request,"reports,filters",Positive
+API rate limit documentation (Sample #59),API documentation is missing details on rate limiting limits per tier.,Medium,Improvement,"api,documentation",Neutral
+Session timeout too short (Sample #60),"User session expires every 15 minutes, which is disruptive to workflows.",High,Improvement,"security,session",Negative
+Search results irrelevant (Sample #61),Full-text search results do not prioritize exact matches for user titles.,Medium,Improvement,"search,relevance",Negative
+MFA configuration error (Sample #62),Setting up MFA with Authy gives a 500 error code during code verification.,Critical,Bug,"security,auth,mfa",Negative
+Session timeout too short (Sample #63),"User session expires every 15 minutes, which is disruptive to workflows.",High,Improvement,"security,session",Negative
+Support chat widget (Sample #64),Add an interactive support chat widget in the help center page.,Medium,Feature Request,"support,chat",Positive
+Dark mode toggle (Sample #65),A dark theme option should be added to reduce eye strain during night usage.,Low,Feature Request,"ui,accessibility",Positive
+Password reset link expired (Sample #66),"Password reset emails arrive 20 minutes late, causing them to be expired.",Critical,Bug,"auth,email",Negative
+Billing invoice receipt download (Sample #67),Invoice PDF downloads fail with a network error on the billing page.,High,Bug,"billing,finance",Negative
+MFA configuration error (Sample #68),Setting up MFA with Authy gives a 500 error code during code verification.,Critical,Bug,"security,auth,mfa",Negative
+Filter by date range in reports (Sample #69),The reporting tab needs custom start/end date selectors.,High,Feature Request,"reports,filters",Positive
+Session timeout too short (Sample #70),"User session expires every 15 minutes, which is disruptive to workflows.",High,Improvement,"security,session",Negative
+MFA configuration error (Sample #71),Setting up MFA with Google Authenticator gives a 500 error code during code verification.,Critical,Bug,"security,auth,mfa",Negative
+Support chat widget (Sample #72),Add an interactive support chat widget in the help center page.,Medium,Feature Request,"support,chat",Positive
+API rate limit documentation (Sample #73),API documentation is missing details on rate limiting limits per tier.,Medium,Improvement,"api,documentation",Neutral
+Notification settings toggle (Sample #74),Add granular toggle options for email vs. push notifications.,Low,Improvement,"settings,notifications",Neutral
+Export to Excel format (Sample #75),Allow users to export tables and graphs directly to Excel.,Medium,Feature Request,"export,data",Neutral
+Dashboard loading slow (Sample #76),The dashboard takes over 30 seconds to load when fetching yearly metrics.,High,Improvement,"dashboard,performance",Negative
+Notification settings toggle (Sample #77),Add granular toggle options for email vs. push notifications.,Low,Improvement,"settings,notifications",Neutral
+Integrate Slack login (Sample #78),Provide OAuth authentication option using Slack for easier login.,Medium,Feature Request,"auth,integration",Positive
+Profile picture crop tool (Sample #79),Add a cropping utility when uploading profile photos.,Low,Improvement,"profile,ui",Neutral
+Search results irrelevant (Sample #80),Full-text search results do not prioritize exact matches for user titles.,Medium,Improvement,"search,relevance",Negative
+Billing invoice receipt download (Sample #81),Invoice PDF downloads fail with a network error on the billing page.,High,Bug,"billing,finance",Negative
+Dark mode toggle (Sample #82),A dark theme option should be added to reduce eye strain during night usage.,Low,Feature Request,"ui,accessibility",Positive
+Dark mode toggle (Sample #83),A dark theme option should be added to reduce eye strain during night usage.,Low,Feature Request,"ui,accessibility",Positive
+Filter by date range in reports (Sample #84),The reporting tab needs custom start/end date selectors.,High,Feature Request,"reports,filters",Positive
+Search results irrelevant (Sample #85),Full-text search results do not prioritize exact matches for user titles.,Medium,Improvement,"search,relevance",Negative
+PDF report header format (Sample #86),Company logo in exported PDF reports appears blurry and stretched.,Low,Improvement,"export,pdf,design",Negative
+MFA configuration error (Sample #87),Setting up MFA with Authy gives a 500 error code during code verification.,Critical,Bug,"security,auth,mfa",Negative
+API rate limit documentation (Sample #88),API documentation is missing details on rate limiting limits per tier.,Medium,Improvement,"api,documentation",Neutral
+Broken link in footer (Sample #89),The privacy policy link in the footer returns a 404 error page.,Medium,Bug,"ui,broken-link",Negative
+Broken link in footer (Sample #90),The privacy policy link in the footer returns a 404 error page.,Medium,Bug,"ui,broken-link",Negative
+Dashboard loading slow (Sample #91),The dashboard takes over 18 seconds to load when fetching yearly metrics.,High,Improvement,"dashboard,performance",Negative
+Automated backup settings (Sample #92),Allow teams to schedule automated backups of their workspace data.,High,Feature Request,"backup,security",Positive
+Session timeout too short (Sample #93),"User session expires every 15 minutes, which is disruptive to workflows.",High,Improvement,"security,session",Negative
+MFA configuration error (Sample #94),Setting up MFA with Authy gives a 500 error code during code verification.,Critical,Bug,"security,auth,mfa",Negative
+Notification settings toggle (Sample #95),Add granular toggle options for email vs. push notifications.,Low,Improvement,"settings,notifications",Neutral
+Dashboard loading slow (Sample #96),The dashboard takes over 24 seconds to load when fetching yearly metrics.,High,Improvement,"dashboard,performance",Negative
+MFA configuration error (Sample #97),Setting up MFA with Microsoft Authenticator gives a 500 error code during code verification.,Critical,Bug,"security,auth,mfa",Negative
+Broken link in footer (Sample #98),The privacy policy link in the footer returns a 404 error page.,Medium,Bug,"ui,broken-link",Negative
+Dashboard loading slow (Sample #99),The dashboard takes over 10 seconds to load when fetching yearly metrics.,High,Improvement,"dashboard,performance",Negative
+PDF report header format (Sample #100),Company logo in exported PDF reports appears blurry and stretched.,Low,Improvement,"export,pdf,design",Negative

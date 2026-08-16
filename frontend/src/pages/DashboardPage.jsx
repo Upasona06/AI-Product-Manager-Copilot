@@ -27,6 +27,28 @@ const DashboardPage = () => {
     negative: 0,
     mixed: 0
   });
+  const [priorityStats, setPriorityStats] = useState({
+    critical: 0,
+    high: 0,
+    medium: 0,
+    low: 0
+  });
+  const [moscowStats, setMoscowStats] = useState({
+    must: 0,
+    should: 0,
+    could: 0,
+    wont: 0
+  });
+  const [totalFeatures, setTotalFeatures] = useState(0);
+
+  const [heatmapMatrix, setHeatmapMatrix] = useState({
+    bug: { positive: 0, neutral: 0, mixed: 0, negative: 0 },
+    feature: { positive: 0, neutral: 0, mixed: 0, negative: 0 },
+    complaint: { positive: 0, neutral: 0, mixed: 0, negative: 0 },
+    improvement: { positive: 0, neutral: 0, mixed: 0, negative: 0 }
+  });
+  const [maxHeatmapVal, setMaxHeatmapVal] = useState(1);
+  const [trendData, setTrendData] = useState([]);
 
   const [pipelineRunning, setPipelineRunning] = useState(false);
   const [pipelineStatusMsg, setPipelineStatusMsg] = useState(null);
@@ -47,6 +69,7 @@ const DashboardPage = () => {
       const classifyRes = await api.get(`/api/classification/results?project_id=${user.project_id}`);
       let localCategoryStats = { bug: 0, feature: 0, complaint: 0, improvement: 0 };
       let localSentimentStats = { positive: 0, neutral: 0, negative: 0, mixed: 0 };
+      let localPriorityStats = { critical: 0, high: 0, medium: 0, low: 0 };
       let duplicateMatchesCount = 0;
 
       if (classifyRes.data.success) {
@@ -60,6 +83,7 @@ const DashboardPage = () => {
         rawClassified.forEach(item => {
           const cat = (item.ai_category || item.category || "").toLowerCase();
           const sent = (item.ai_sentiment || item.sentiment || "").toLowerCase();
+          const prio = (item.priority || "medium").toLowerCase();
           
           if (cat.includes("bug")) localCategoryStats.bug += 1;
           else if (cat.includes("feature")) localCategoryStats.feature += 1;
@@ -70,7 +94,74 @@ const DashboardPage = () => {
           else if (sent.includes("neutral")) localSentimentStats.neutral += 1;
           else if (sent.includes("negative")) localSentimentStats.negative += 1;
           else if (sent.includes("mixed")) localSentimentStats.mixed += 1;
+
+          if (prio.includes("critical")) localPriorityStats.critical += 1;
+          else if (prio.includes("high")) localPriorityStats.high += 1;
+          else if (prio.includes("low")) localPriorityStats.low += 1;
+          else localPriorityStats.medium += 1; // Default to medium
         });
+
+        // Heatmap Matrix Aggregation
+        let localHeatmap = {
+          bug: { positive: 0, neutral: 0, mixed: 0, negative: 0 },
+          feature: { positive: 0, neutral: 0, mixed: 0, negative: 0 },
+          complaint: { positive: 0, neutral: 0, mixed: 0, negative: 0 },
+          improvement: { positive: 0, neutral: 0, mixed: 0, negative: 0 }
+        };
+        let maxVal = 1;
+
+        rawClassified.forEach(item => {
+          const cat = (item.ai_category || item.category || "").toLowerCase();
+          const sent = (item.ai_sentiment || item.sentiment || "").toLowerCase();
+          
+          let catKey = null;
+          if (cat.includes("bug")) catKey = "bug";
+          else if (cat.includes("feature")) catKey = "feature";
+          else if (cat.includes("complaint")) catKey = "complaint";
+          else if (cat.includes("improvement")) catKey = "improvement";
+
+          let sentKey = null;
+          if (sent.includes("positive")) sentKey = "positive";
+          else if (sent.includes("neutral")) sentKey = "neutral";
+          else if (sent.includes("mixed")) sentKey = "mixed";
+          else if (sent.includes("negative")) sentKey = "negative";
+
+          if (catKey && sentKey) {
+            localHeatmap[catKey][sentKey] += 1;
+            if (localHeatmap[catKey][sentKey] > maxVal) {
+              maxVal = localHeatmap[catKey][sentKey];
+            }
+          }
+        });
+        setHeatmapMatrix(localHeatmap);
+        setMaxHeatmapVal(maxVal);
+
+        // Ingestion Trend (last 7 days)
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          return d.toISOString().split('T')[0];
+        }).reverse();
+
+        let localTrend = {};
+        last7Days.forEach(date => {
+          localTrend[date] = 0;
+        });
+
+        rawClassified.forEach(item => {
+          if (item.created_at) {
+            const dateStr = item.created_at.split('T')[0];
+            if (localTrend[dateStr] !== undefined) {
+              localTrend[dateStr] += 1;
+            }
+          }
+        });
+
+        const formattedTrend = last7Days.map(date => {
+          const formattedDate = new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+          return { date: formattedDate, count: localTrend[date] };
+        });
+        setTrendData(formattedTrend);
 
         // Sum weights to calculate duplicates
         duplicateMatchesCount = rawClassified.reduce((acc, curr) => acc + ((curr.weight || 1) - 1), 0);
@@ -78,6 +169,28 @@ const DashboardPage = () => {
 
       setCategoryStats(localCategoryStats);
       setSentimentStats(localSentimentStats);
+      setPriorityStats(localPriorityStats);
+      
+      // 3. Fetch prioritized backlog for MoSCoW breakdown
+      let localMoscowStats = { must: 0, should: 0, could: 0, wont: 0 };
+      try {
+        const prioritizeRes = await api.get(`/api/prioritize/results?project_id=${user.project_id}&page_size=1000`);
+        if (prioritizeRes.data.success) {
+          const featuresList = prioritizeRes.data.data.results || [];
+          setTotalFeatures(prioritizeRes.data.data.total || featuresList.length);
+          
+          featuresList.forEach(f => {
+            const m = (f.moscow_category || "").toLowerCase();
+            if (m.includes("must")) localMoscowStats.must += 1;
+            else if (m.includes("should")) localMoscowStats.should += 1;
+            else if (m.includes("could")) localMoscowStats.could += 1;
+            else if (m.includes("wont") || m.includes("won't")) localMoscowStats.wont += 1;
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load prioritized backlog features for dashboard:", err);
+      }
+      setMoscowStats(localMoscowStats);
       
       setStats({
         pending: 0,
@@ -350,6 +463,195 @@ const DashboardPage = () => {
 
             </div>
           </div>
+
+          {/* Chart 3: Feedback Priority */}
+          <div className="chart-card glass-panel">
+            <h3>Priority Distribution</h3>
+            <p className="chart-subtitle">Priority weightings of user submissions ({totalClassified} items)</p>
+            <div className="chart-content vertical-center" style={{ width: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', padding: '0 0.5rem' }}>
+                {[
+                  { name: 'Critical', value: priorityStats.critical, color: '#ef4444' },
+                  { name: 'High', value: priorityStats.high, color: '#f97316' },
+                  { name: 'Medium', value: priorityStats.medium, color: '#eab308' },
+                  { name: 'Low', value: priorityStats.low, color: '#3b82f6' }
+                ].map((item, idx) => {
+                  const pct = totalClassified > 0 ? Math.round((item.value / totalClassified) * 100) : 0;
+                  return (
+                    <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>{item.name}</span>
+                        <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{item.value} ({pct}%)</span>
+                      </div>
+                      <div style={{ height: '8px', background: 'rgba(255,255,255,0.04)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
+                        <div style={{ width: `${pct}%`, height: '100%', background: item.color, borderRadius: '4px', transition: 'width 1s ease' }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Chart 4: MoSCoW Prioritization */}
+          <div className="chart-card glass-panel">
+            <h3>MoSCoW Backlog Breakdown</h3>
+            <p className="chart-subtitle">Categorization of feature backlog items ({totalFeatures} features)</p>
+            <div className="chart-content vertical-center" style={{ width: '100%' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', width: '100%' }}>
+                {[
+                  { name: 'Must Have', value: moscowStats.must, color: 'rgba(16, 185, 129, 0.15)', text: '#10b981', border: 'rgba(16, 185, 129, 0.3)', desc: 'Critical requirements' },
+                  { name: 'Should Have', value: moscowStats.should, color: 'rgba(59, 130, 246, 0.15)', text: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)', desc: 'High priority features' },
+                  { name: 'Could Have', value: moscowStats.could, color: 'rgba(245, 158, 11, 0.15)', text: '#f59e0b', border: 'rgba(245, 158, 11, 0.3)', desc: 'Desirable improvements' },
+                  { name: 'Won\'t Have', value: moscowStats.wont, color: 'rgba(239, 68, 68, 0.15)', text: '#ef4444', border: 'rgba(239, 68, 68, 0.3)', desc: 'Deferred items' }
+                ].map((item, idx) => (
+                  <div key={idx} style={{ 
+                    background: item.color, 
+                    border: `1px solid ${item.border}`, 
+                    borderRadius: '12px', 
+                    padding: '0.85rem 1rem', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'space-between',
+                    gap: '0.25rem'
+                  }}>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{item.name}</strong>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{item.desc}</span>
+                    </div>
+                    <strong style={{ fontSize: '1.75rem', color: item.text, display: 'block', marginTop: '0.25rem' }}>{item.value}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Chart 5: Category-Sentiment Heatmap */}
+          <div className="chart-card glass-panel">
+            <h3>Category vs Sentiment Heatmap</h3>
+            <p className="chart-subtitle">Cross-analysis of feedback category density and sentiments</p>
+            <div className="chart-content vertical-center" style={{ width: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+                
+                {/* Sentiment Header labels */}
+                <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr 1fr 1fr', gap: '0.5rem', textAlign: 'center', fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
+                  <div></div>
+                  <div>Positive</div>
+                  <div>Neutral</div>
+                  <div>Mixed</div>
+                  <div>Negative</div>
+                </div>
+
+                {/* Heatmap Rows */}
+                {[
+                  { label: 'Bug 🐞', key: 'bug' },
+                  { label: 'Feature 💡', key: 'feature' },
+                  { label: 'Complaint ⚠️', key: 'complaint' },
+                  { label: 'Improve 🚀', key: 'improvement' }
+                ].map((row, rowIdx) => (
+                  <div key={rowIdx} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr 1fr 1fr', gap: '0.5rem', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: '500' }}>{row.label}</span>
+                    {['positive', 'neutral', 'mixed', 'negative'].map((colKey, colIdx) => {
+                      const count = heatmapMatrix[row.key]?.[colKey] || 0;
+                      const opacity = totalClassified > 0 ? (count / maxHeatmapVal) * 0.85 + (count > 0 ? 0.15 : 0) : 0;
+                      
+                      return (
+                        <div 
+                          key={colIdx} 
+                          title={`${row.label.split(' ')[0]} with ${colKey} sentiment: ${count} items`}
+                          style={{
+                            background: count > 0 ? `rgba(124, 58, 237, ${opacity})` : 'rgba(255,255,255,0.01)',
+                            border: count > 0 ? '1px solid rgba(124, 58, 237, 0.3)' : '1px solid var(--glass-border)',
+                            borderRadius: '6px',
+                            height: '32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.8rem',
+                            fontWeight: '600',
+                            color: count > 0 ? '#fff' : 'var(--text-muted)',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          {count > 0 ? count : ''}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Chart 6: Ingestion Trend Line Chart */}
+          <div className="chart-card glass-panel">
+            <h3>Ingestion Trend</h3>
+            <p className="chart-subtitle">Volume of feedback processed over the last 7 days</p>
+            <div className="chart-content vertical-center" style={{ width: '100%' }}>
+              {trendData.length > 0 ? (
+                <div style={{ width: '100%', height: '180px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <svg viewBox="0 0 350 150" style={{ width: '100%', height: '140px', overflow: 'visible' }}>
+                    <defs>
+                      <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--accent-primary)" stopOpacity="0.4"/>
+                        <stop offset="100%" stopColor="var(--accent-primary)" stopOpacity="0.0"/>
+                      </linearGradient>
+                    </defs>
+                    
+                    {/* Grid Lines */}
+                    <line x1="0" y1="30" x2="350" y2="30" stroke="var(--glass-border)" strokeWidth="0.5" strokeDasharray="3" />
+                    <line x1="0" y1="75" x2="350" y2="75" stroke="var(--glass-border)" strokeWidth="0.5" strokeDasharray="3" />
+                    <line x1="0" y1="120" x2="350" y2="120" stroke="var(--glass-border)" strokeWidth="0.5" strokeDasharray="3" />
+
+                    {/* Generate path points */}
+                    {(() => {
+                      const maxVal = Math.max(...trendData.map(d => d.count), 1);
+                      const points = trendData.map((d, i) => {
+                        const x = (i * 350) / (trendData.length - 1);
+                        const y = 120 - (d.count * 90) / maxVal;
+                        return { x, y, count: d.count };
+                      });
+                      
+                      const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+                      const areaD = `${pathD} L ${points[points.length-1].x} 120 L ${points[0].x} 120 Z`;
+
+                      return (
+                        <>
+                          {/* Area under line */}
+                          <path d={areaD} fill="url(#trendGradient)" />
+                          
+                          {/* Line */}
+                          <path d={pathD} fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" />
+                          
+                          {/* Circles & Labels */}
+                          {points.map((p, i) => (
+                            <g key={i}>
+                              <circle cx={p.x} cy={p.y} r="4" fill="var(--bg-secondary)" stroke="var(--accent-primary)" strokeWidth="2" />
+                              <text x={p.x} y={p.y - 8} textAnchor="middle" fontSize="9" fill="var(--text-primary)" fontWeight="600">
+                                {p.count}
+                              </text>
+                            </g>
+                          ))}
+                        </>
+                      );
+                    })()}
+                  </svg>
+                  
+                  {/* X Axis labels */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px' }}>
+                    {trendData.map((d, i) => (
+                      <span key={i} style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                        {d.date}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No trend data available.</div>
+              )}
+            </div>
+          </div>
+
         </div>
       )}
 

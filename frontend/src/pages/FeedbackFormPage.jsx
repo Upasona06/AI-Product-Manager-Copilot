@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import FeedbackForm from '../components/FeedbackForm';
 import api from '../services/api';
 
@@ -7,8 +7,9 @@ const FeedbackFormPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchMyFeedback = async () => {
+  const fetchMyFeedback = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await api.get('/api/ingest/my-feedback');
       if (response.data.success) {
@@ -20,7 +21,7 @@ const FeedbackFormPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchMyFeedback();
@@ -69,8 +70,21 @@ const FeedbackFormPage = () => {
 
         {/* Right Side: Submitted Feedback List */}
         <div className="portal-history-column glass-panel">
-          <h2 className="panel-title">Your Submitted Feedback</h2>
-          <p className="panel-subtitle">Track the status of your reported items</p>
+          <div className="panel-title-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div>
+              <h2 className="panel-title">Your Submitted Feedback</h2>
+              <p className="panel-subtitle">Track the status of your reported items</p>
+            </div>
+            <button
+              className="action-btn refresh-btn"
+              onClick={fetchMyFeedback}
+              disabled={loading}
+              title="Refresh to see latest processing status"
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              {loading ? '⏳ Refreshing...' : '🔄 Refresh Status'}
+            </button>
+          </div>
 
           {loading && feedbacks.length === 0 ? (
             <div className="history-loader">

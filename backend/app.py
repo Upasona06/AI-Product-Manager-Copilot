@@ -24,6 +24,7 @@ from routes.aggregate_routes import aggregate_bp
 from routes.prioritize_routes import prioritize_bp
 from routes.prd_routes import prd_bp
 from routes.assistant_routes import assistant_bp
+from routes.user_story_routes import user_story_bp
 
 def create_app(config_class=None):
     app = Flask(__name__)
@@ -53,6 +54,7 @@ def create_app(config_class=None):
     app.register_blueprint(prioritize_bp, url_prefix="/api/prioritize")
     app.register_blueprint(prd_bp, url_prefix="/api/prd")
     app.register_blueprint(assistant_bp, url_prefix="/api/assistant")
+    app.register_blueprint(user_story_bp, url_prefix="/api/user-story")
 
     @app.route("/api/test")
     def test():

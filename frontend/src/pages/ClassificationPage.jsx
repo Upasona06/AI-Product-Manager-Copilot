@@ -258,9 +258,7 @@ const ClassificationPage = () => {
     fontWeight: 700,
     letterSpacing: "-0.03em",
     marginBottom: "0.5rem",
-    background: "linear-gradient(to right, #ffffff, #c084fc)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
+    color: "var(--text-primary)",
     margin: 0
   };
 
@@ -329,14 +327,14 @@ const ClassificationPage = () => {
 
   const metricIconStyle = {
     fontSize: "2.2rem",
-    background: "rgba(255, 255, 255, 0.05)",
+    background: "var(--glass-bg)",
     width: "60px",
     height: "60px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "12px",
-    border: "1px solid rgba(255, 255, 255, 0.08)"
+    border: "1px solid var(--glass-border)"
   };
 
   const metricDataStyle = {
@@ -348,7 +346,7 @@ const ClassificationPage = () => {
     fontSize: "1.8rem",
     fontWeight: 700,
     lineHeight: "1.2",
-    color: "#f3f4f6"
+    color: "var(--text-primary)"
   };
 
   const metricLabelStyle = {
@@ -358,10 +356,10 @@ const ClassificationPage = () => {
   };
 
   const filterToolbarStyle = {
-    background: "rgba(255, 255, 255, 0.03)",
+    background: "var(--glass-bg)",
     backdropFilter: "blur(16px)",
     WebkitBackdropFilter: "blur(16px)",
-    border: "1px solid rgba(255, 255, 255, 0.08)",
+    border: "1px solid var(--glass-border)",
     borderRadius: "12px",
     padding: "1.25rem",
     marginBottom: "2rem",
@@ -380,10 +378,10 @@ const ClassificationPage = () => {
   };
 
   const inputStyle = {
-    background: "rgba(10, 10, 18, 0.6)",
-    border: "1px solid rgba(255, 255, 255, 0.08)",
+    background: "var(--bg-secondary)",
+    border: "1px solid var(--glass-border)",
     borderRadius: "6px",
-    color: "#f3f4f6",
+    color: "var(--text-primary)",
     padding: "0.75rem 1rem",
     fontSize: "0.95rem",
     outline: "none",
@@ -393,10 +391,10 @@ const ClassificationPage = () => {
   };
 
   const selectStyle = {
-    background: "rgba(10, 10, 18, 0.6)",
-    border: "1px solid rgba(255, 255, 255, 0.08)",
+    background: "var(--bg-secondary)",
+    border: "1px solid var(--glass-border)",
     borderRadius: "6px",
-    color: "#f3f4f6",
+    color: "var(--text-primary)",
     padding: "0.75rem 1rem",
     fontSize: "0.95rem",
     outline: "none",
@@ -426,10 +424,10 @@ const ClassificationPage = () => {
 
   const thStyle = {
     padding: "1rem 1.25rem",
-    borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+    borderBottom: "1px solid var(--glass-border)",
     fontWeight: "600",
-    color: "#9ca3af",
-    background: "rgba(255, 255, 255, 0.02)",
+    color: "var(--text-secondary)",
+    background: "var(--glass-bg)",
     textTransform: "uppercase",
     fontSize: "0.8rem",
     letterSpacing: "0.05em"
@@ -437,8 +435,8 @@ const ClassificationPage = () => {
 
   const tdStyle = {
     padding: "1rem 1.25rem",
-    borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-    color: "#f3f4f6",
+    borderBottom: "1px solid var(--glass-border)",
+    color: "var(--text-primary)",
     verticalAlign: "middle"
   };
 

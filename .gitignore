@@ -29,6 +29,11 @@ frontend/node_modules/
 Thumbs.db
 
 
+# Chroma DB & Local Cache
+chromadb_data/
+backend/chromadb_data/
+scratch/
+
 node_modules/
-frontend/node_modules/git status
+frontend/node_modules/
 backend/node_modules/

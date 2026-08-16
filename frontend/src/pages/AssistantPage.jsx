@@ -150,7 +150,7 @@ const AssistantPage = () => {
       });
 
       if (isBold) {
-        return <strong key={idx} style={{ fontWeight: '700', color: '#ffffff' }}>{renderedSubParts}</strong>;
+        return <strong key={idx} style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{renderedSubParts}</strong>;
       }
       return <span key={idx}>{renderedSubParts}</span>;
     });
@@ -182,7 +182,7 @@ const AssistantPage = () => {
         return (
           <div key={lineIdx} style={{ marginLeft: `${indent * 0.5 + 1.25}rem`, marginBottom: '0.5rem', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
             <span style={{ color: '#a78bfa', fontWeight: 'bold' }}>•</span>
-            <span style={{ flex: 1, fontSize: '0.94rem', color: '#d1d5db', lineHeight: '1.5' }}>{parseBoldAndItalic(content)}</span>
+            <span style={{ flex: 1, fontSize: '0.94rem', lineHeight: '1.5' }}>{parseBoldAndItalic(content)}</span>
           </div>
         );
       }
@@ -403,10 +403,10 @@ const AssistantPage = () => {
 
         /* Glass Panel Premium */
         .glass-panel-premium {
-          background: rgba(15, 15, 26, 0.45);
+          background: var(--glass-premium-bg, rgba(15, 15, 26, 0.45));
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          border: 1px solid var(--glass-premium-border, rgba(255, 255, 255, 0.06));
           border-radius: 24px;
           box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
           transition: var(--transition-smooth);
@@ -430,9 +430,7 @@ const AssistantPage = () => {
           font-weight: 800;
           margin: 0;
           letter-spacing: -0.03em;
-          background: linear-gradient(135deg, #ffffff 0%, #c084fc 100%);
-          WebkitBackgroundClip: text;
-          WebkitTextFillColor: transparent;
+          color: var(--text-primary);
         }
 
         .chat-main-subtitle {
@@ -649,8 +647,8 @@ const AssistantPage = () => {
         }
 
         .prompt-card {
-          background: rgba(255, 255, 255, 0.015);
-          border: 1px solid rgba(255, 255, 255, 0.05);
+          background: var(--glass-bg);
+          border: 1px solid var(--glass-border);
           border-radius: 18px;
           padding: 1.2rem;
           cursor: pointer;
@@ -664,7 +662,7 @@ const AssistantPage = () => {
 
         .prompt-card:hover {
           background: rgba(255, 255, 255, 0.03);
-          border-color: rgba(255, 255, 255, 0.12);
+          border-color: var(--glass-hover-border);
           transform: translateY(-2px);
           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
@@ -700,7 +698,7 @@ const AssistantPage = () => {
         .prompt-card-title {
           font-size: 0.95rem;
           font-weight: 600;
-          color: #ffffff;
+          color: var(--text-primary);
           margin: 0;
           line-height: 1.4;
         }

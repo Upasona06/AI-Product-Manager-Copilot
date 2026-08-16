@@ -144,8 +144,8 @@ const PRDGeneratorPage = () => {
                   width: '100%',
                   padding: '0.75rem',
                   borderRadius: '6px',
-                  background: 'rgba(0, 0, 0, 0.2)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--glass-border)',
                   color: 'var(--text-primary)',
                   cursor: 'pointer'
                 }}
@@ -254,8 +254,8 @@ const PRDGeneratorPage = () => {
           {generatedPRD ? (
             <div style={{
               flex: 1,
-              background: 'rgba(0, 0, 0, 0.25)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--glass-border)',
               borderRadius: '6px',
               padding: '1.25rem',
               overflowY: 'auto',
@@ -264,7 +264,7 @@ const PRDGeneratorPage = () => {
               whiteSpace: 'pre-wrap',
               fontSize: '0.9rem',
               lineHeight: '1.5',
-              color: '#d1d5db'
+              color: 'var(--text-primary)'
             }}>
               {generatedPRD}
             </div>

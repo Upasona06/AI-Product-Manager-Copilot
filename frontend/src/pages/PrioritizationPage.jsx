@@ -232,7 +232,7 @@ const PrioritizationPage = () => {
             style={{
               padding: '0.5rem 1rem',
               borderRadius: 'var(--border-radius-sm)',
-              background: '#16162a',
+              background: 'var(--bg-secondary)',
               border: '1px solid var(--glass-border)',
               color: 'var(--text-primary)',
               cursor: 'pointer'
@@ -253,7 +253,7 @@ const PrioritizationPage = () => {
             style={{
               padding: '0.5rem 1rem',
               borderRadius: 'var(--border-radius-sm)',
-              background: '#16162a',
+              background: 'var(--bg-secondary)',
               border: '1px solid var(--glass-border)',
               color: 'var(--text-primary)',
               cursor: 'pointer'
@@ -272,7 +272,7 @@ const PrioritizationPage = () => {
             style={{
               padding: '0.5rem 1rem',
               borderRadius: 'var(--border-radius-sm)',
-              background: '#16162a',
+              background: 'var(--bg-secondary)',
               border: '1px solid var(--glass-border)',
               color: 'var(--text-primary)',
               cursor: 'pointer'
@@ -295,7 +295,7 @@ const PrioritizationPage = () => {
             style={{
               padding: '0.5rem 1rem',
               borderRadius: 'var(--border-radius-sm)',
-              background: '#16162a',
+              background: 'var(--bg-secondary)',
               border: '1px solid var(--glass-border)',
               color: 'var(--text-primary)',
               cursor: 'pointer'

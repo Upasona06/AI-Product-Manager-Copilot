@@ -77,6 +77,13 @@ const Navbar = () => {
             </Link>
 
             <Link
+              to="/user-stories"
+              className={`navbar-link-item ${isActive('/user-stories')}`}
+            >
+              📝 User Stories
+            </Link>
+
+            <Link
               to="/assistant"
               className={`navbar-link-item ${isActive('/assistant')}`}
             >
@@ -84,14 +91,22 @@ const Navbar = () => {
             </Link>
 
 
-            <Link
-              to="/upload/feedback"
-              className={`navbar-link-item ${isActive('/upload/feedback')}`}
-            >
-              ✍️ Submit Feedback
-            </Link>
           </>
         )}
+
+        <Link
+          to="/upload/feedback"
+          className={`navbar-link-item ${isActive('/upload/feedback')}`}
+        >
+          ✍️ Submit Feedback
+        </Link>
+
+        <Link
+          to="/settings"
+          className={`navbar-link-item ${isActive('/settings')}`}
+        >
+          ⚙️ Settings
+        </Link>
       </div>
 
       <div className="navbar-user-profile">

@@ -16,8 +16,15 @@ import AggregationPage from './pages/AggregationPage';
 import PrioritizationPage from './pages/PrioritizationPage';
 import PRDGeneratorPage from './pages/PRDGeneratorPage';
 import AssistantPage from './pages/AssistantPage';
+import UserStoriesPage from './pages/UserStoriesPage';
+import SettingsPage from './pages/SettingsPage';
 
 function App() {
+  React.useEffect(() => {
+    const savedTheme = localStorage.getItem('app_theme') || 'default';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
@@ -84,6 +91,22 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['product_manager']}>
                     <PRDGeneratorPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/user-stories"
+                element={
+                  <ProtectedRoute allowedRoles={['product_manager']}>
+                    <UserStoriesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute allowedRoles={['product_manager', 'customer']}>
+                    <SettingsPage />
                   </ProtectedRoute>
                 }
               />
