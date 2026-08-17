@@ -27,7 +27,8 @@ def run_migration():
         "init_schema.sql", 
         "add_classified_feedback.sql", 
         "add_aggregated_features.sql",
-        "add_user_stories.sql"
+        "add_user_stories.sql",
+        "add_assistant_chats.sql"
     ]
     
     # Verify all migration files exist before starting

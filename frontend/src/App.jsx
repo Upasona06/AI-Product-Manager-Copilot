@@ -20,6 +20,18 @@ import UserStoriesPage from './pages/UserStoriesPage';
 import SettingsPage from './pages/SettingsPage';
 
 function App() {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => {
+    return localStorage.getItem('sidebar_collapsed') === 'true';
+  });
+
+  const handleToggleSidebar = () => {
+    setIsSidebarCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem('sidebar_collapsed', String(next));
+      return next;
+    });
+  };
+
   React.useEffect(() => {
     const savedTheme = localStorage.getItem('app_theme') || 'default';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -28,8 +40,20 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="app-shell">
-          <Navbar />
+        <div className={`app-shell ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+          <Navbar isCollapsed={isSidebarCollapsed} onToggle={handleToggleSidebar} />
+
+          {isSidebarCollapsed && (
+            <button
+              type="button"
+              onClick={handleToggleSidebar}
+              className="sidebar-floating-toggle-btn"
+              title="Enable / Expand Sidebar"
+            >
+              <span>☰</span>
+              <span>Menu</span>
+            </button>
+          )}
 
           <main className="main-content-layout">
             <Routes>

@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
-const Navbar = () => {
+const Navbar = ({ isCollapsed, onToggle }) => {
   const { user, logout, isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
@@ -21,11 +21,19 @@ const Navbar = () => {
 
   return (
     <nav className="navbar-container">
-      <div className="navbar-brand">
+      <div className="navbar-brand-row">
         <Link to="/dashboard" className="navbar-logo-link">
           <span className="logo-icon">🚀</span>
           <span className="logo-text">PM Copilot</span>
         </Link>
+        <button
+          type="button"
+          onClick={onToggle}
+          className="sidebar-toggle-btn"
+          title="Disable / Collapse Sidebar"
+        >
+          ◀
+        </button>
       </div>
 
       <div className="navbar-links">

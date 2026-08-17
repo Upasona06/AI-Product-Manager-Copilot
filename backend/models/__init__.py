@@ -5,5 +5,6 @@ from .user import User
 from .raw_feedback import RawFeedback
 from .processed_feedback import ProcessedFeedback
 from .user_story import UserStory
+from .assistant_chat import AssistantChat
 
-__all__ = ["User", "RawFeedback", "ProcessedFeedback", "UserStory"]
+__all__ = ["User", "RawFeedback", "ProcessedFeedback", "UserStory", "AssistantChat"]

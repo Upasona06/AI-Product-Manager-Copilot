@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
+import MarkdownRenderer from '../components/MarkdownRenderer';
 
 const UserStoriesPage = () => {
   const { user } = useContext(AuthContext);
@@ -364,22 +365,7 @@ const UserStoriesPage = () => {
           )}
 
           {activeStory ? (
-            <div style={{
-              flex: 1,
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--glass-border)',
-              borderRadius: '6px',
-              padding: '1.25rem',
-              overflowY: 'auto',
-              maxHeight: '680px',
-              fontFamily: 'monospace',
-              whiteSpace: 'pre-wrap',
-              fontSize: '0.9rem',
-              lineHeight: '1.5',
-              color: 'var(--text-primary)'
-            }}>
-              {activeStory.story_content}
-            </div>
+            <MarkdownRenderer content={activeStory.story_content} />
           ) : (
             <div style={{
               flex: 1,
