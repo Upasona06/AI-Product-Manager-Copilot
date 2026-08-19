@@ -16,8 +16,12 @@ import AggregationPage from './pages/AggregationPage';
 import PrioritizationPage from './pages/PrioritizationPage';
 import PRDGeneratorPage from './pages/PRDGeneratorPage';
 import AssistantPage from './pages/AssistantPage';
+import RoadmapPage from './pages/RoadmapPage';
+import StrategyReportsPage from './pages/StrategyReportsPage';
+
 
 function App() {
+
   return (
     <AuthProvider>
       <Router>
@@ -95,6 +99,23 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/roadmap"
+                element={
+                  <ProtectedRoute allowedRoles={['product_manager']}>
+                    <RoadmapPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports"
+                element={
+                  <ProtectedRoute allowedRoles={['product_manager']}>
+                    <StrategyReportsPage />
+                  </ProtectedRoute>
+                }
+              />
+
 
 
               {/* Protected Combined Routes (PM & Customer) */}
