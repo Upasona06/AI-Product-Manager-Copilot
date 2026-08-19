@@ -33,34 +33,34 @@ def register():
             "error": "Invalid role. Role must be 'product_manager' or 'customer'."
         }), 400
         
-    # Check if user already exists
-    existing_user = User.query.filter_by(email=email).first()
-    if existing_user:
-        return jsonify({
-            "success": False,
-            "error": "Email is already registered."
-        }), 409
-        
-    # Hash password using bcrypt
-    password_bytes = password.encode('utf-8')
-    salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
-    
-    # Process optional project_id
-    project_uuid = None
-    if project_id_str:
-        try:
-            project_uuid = uuid.UUID(project_id_str)
-        except ValueError:
+    try:
+        # Check if user already exists
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
             return jsonify({
                 "success": False,
-                "error": "Invalid project_id format. Must be a valid UUID."
-            }), 400
-    else:
-        # Fallback to the default test project ID instead of a random UUID so testing is seamless
-        project_uuid = uuid.UUID("550e8400-e29b-41d4-a716-446655440000")
+                "error": "Email is already registered."
+            }), 409
             
-    try:
+        # Hash password using bcrypt
+        password_bytes = password.encode('utf-8')
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
+        
+        # Process optional project_id
+        project_uuid = None
+        if project_id_str:
+            try:
+                project_uuid = uuid.UUID(project_id_str)
+            except ValueError:
+                return jsonify({
+                    "success": False,
+                    "error": "Invalid project_id format. Must be a valid UUID."
+                }), 400
+        else:
+            # Fallback to the default test project ID instead of a random UUID so testing is seamless
+            project_uuid = uuid.UUID("550e8400-e29b-41d4-a716-446655440000")
+                
         new_user = User(
             email=email,
             password_hash=hashed_password,
