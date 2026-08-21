@@ -68,6 +68,7 @@ def generate_report():
         }), 500
 
 
+@report_bp.route("/", methods=["GET"])
 @report_bp.route("", methods=["GET"])
 @jwt_required()
 def get_reports():

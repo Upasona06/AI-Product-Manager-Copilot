@@ -522,14 +522,14 @@ const ClassificationPage = () => {
   };
 
   const modalContentStyle = {
-    background: "#0f0f1a",
-    border: "1px solid rgba(255, 255, 255, 0.08)",
+    background: "var(--bg-secondary)",
+    border: "1px solid var(--glass-border)",
     borderRadius: "12px",
     padding: "2rem",
     width: "100%",
     maxWidth: "500px",
-    boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
-    color: "#f3f4f6"
+    boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
+    color: "var(--text-primary)"
   };
 
   return (

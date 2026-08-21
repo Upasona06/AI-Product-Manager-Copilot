@@ -15,8 +15,8 @@ const renderInline = (text) => {
         <code
           key={`code-${codeIdx}`}
           style={{
-            background: 'rgba(124, 58, 237, 0.15)',
-            color: '#c084fc',
+            background: 'rgba(124, 58, 237, 0.12)',
+            color: 'var(--accent-primary)',
             padding: '0.15rem 0.4rem',
             borderRadius: '4px',
             fontFamily: 'monospace',
@@ -34,21 +34,16 @@ const renderInline = (text) => {
     return boldParts.map((boldPart, boldIdx) => {
       const isBold = boldIdx % 2 !== 0;
 
-      // Inside each bold/non-bold chunk, split by italic: *italic* or _italic_
-      const italicParts = boldPart.split(/(?:^|[^*_])(\*([^*]+)\*|_([^_]+)_)/g);
-      
-      // Let's do a cleaner regex for italic:
+      // Inside each bold/non-bold chunk, split by italic: *italic*
       const subParts = boldPart.split(/\*([^*]+)\*/g);
       const renderedItalic = subParts.map((subPart, subIdx) => {
         if (subIdx % 2 !== 0) {
           return (
-            <em key={`em-${subIdx}`} style={{ fontStyle: 'italic', color: '#e0e7ff' }}>
+            <em key={`em-${subIdx}`} style={{ fontStyle: 'italic', color: 'inherit' }}>
               {subPart}
             </em>
           );
         }
-        
-        // Highlight BDD keywords if present (Given, When, Then, As a, I want to, So that)
         return subPart;
       });
 
@@ -58,7 +53,7 @@ const renderInline = (text) => {
             key={`bold-${boldIdx}`}
             style={{
               fontWeight: 700,
-              color: 'var(--text-primary)',
+              color: 'inherit',
               letterSpacing: '0.01em'
             }}
           >
@@ -75,7 +70,7 @@ const renderInline = (text) => {
 /**
  * Parses and renders complete Markdown text into a clean, modern HTML document.
  */
-const MarkdownRenderer = ({ content, title, className = '' }) => {
+const MarkdownRenderer = ({ content, title, className = '', isChat = false, hideToolbar = false }) => {
   const [viewMode, setViewMode] = useState('formatted'); // 'formatted' | 'raw'
 
   if (!content) return null;
@@ -102,7 +97,7 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
               display: 'flex',
               flexDirection: 'column',
               gap: '0.4rem',
-              color: 'var(--text-primary)'
+              color: 'inherit'
             }}
           >
             {currentList.items.map((item, i) => (
@@ -122,7 +117,7 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
               display: 'flex',
               flexDirection: 'column',
               gap: '0.4rem',
-              color: 'var(--text-primary)'
+              color: 'inherit'
             }}
           >
             {currentList.items.map((item, i) => (
@@ -153,7 +148,7 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
             {currentTable.headers.length > 0 && (
               <thead>
-                <tr style={{ background: 'rgba(124, 58, 237, 0.12)', borderBottom: '1px solid var(--glass-border)' }}>
+                <tr style={{ background: 'rgba(124, 58, 237, 0.1)', borderBottom: '1px solid var(--glass-border)' }}>
                   {currentTable.headers.map((h, i) => (
                     <th key={i} style={{ padding: '0.75rem 1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                       {renderInline(h.trim())}
@@ -167,8 +162,8 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
                 <tr
                   key={rIdx}
                   style={{
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
-                    background: rIdx % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.02)'
+                    borderBottom: '1px solid var(--glass-border)',
+                    background: rIdx % 2 === 0 ? 'transparent' : 'var(--glass-bg)'
                   }}
                 >
                   {row.map((cell, cIdx) => (
@@ -199,16 +194,16 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
           <div
             key={`code-block-${renderedElements.length}`}
             style={{
-              margin: '1rem 0',
-              padding: '1rem 1.25rem',
+              margin: '0.75rem 0',
+              padding: '0.9rem 1.15rem',
               borderRadius: '8px',
-              background: '#09090f',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: 'var(--bg-primary)',
+              border: '1px solid var(--glass-border)',
               overflowX: 'auto',
               fontFamily: 'monospace',
               fontSize: '0.85rem',
               lineHeight: '1.5',
-              color: '#a7f3d0'
+              color: 'var(--text-primary)'
             }}
           >
             {codeBlockLines.join('\n')}
@@ -240,7 +235,7 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
           key={`hr-${renderedElements.length}`}
           style={{
             borderColor: 'var(--glass-border)',
-            margin: '1.75rem 0',
+            margin: '1.5rem 0',
             opacity: 0.6
           }}
         />
@@ -279,17 +274,17 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
           <div
             key={`h1-${renderedElements.length}`}
             style={{
-              marginTop: idx === 0 ? '0' : '1.5rem',
-              marginBottom: '1.25rem',
-              paddingBottom: '0.75rem',
-              borderBottom: '2px solid rgba(124, 58, 237, 0.4)'
+              marginTop: idx === 0 ? '0' : '1.25rem',
+              marginBottom: '1rem',
+              paddingBottom: '0.5rem',
+              borderBottom: '2px solid rgba(124, 58, 237, 0.3)'
             }}
           >
             <h1
               style={{
-                fontSize: '1.6rem',
+                fontSize: isChat ? '1.25rem' : '1.5rem',
                 fontWeight: 700,
-                color: '#fff',
+                color: 'var(--text-primary)',
                 letterSpacing: '-0.02em',
                 lineHeight: 1.3
               }}
@@ -307,8 +302,8 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
           <div
             key={`h2-${renderedElements.length}`}
             style={{
-              marginTop: '1.75rem',
-              marginBottom: '0.75rem',
+              marginTop: '1.25rem',
+              marginBottom: '0.6rem',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem'
@@ -316,12 +311,12 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
           >
             <h2
               style={{
-                fontSize: '1.25rem',
+                fontSize: isChat ? '1.05rem' : '1.2rem',
                 fontWeight: 600,
-                color: '#c4b5fd',
+                color: 'var(--accent-primary)',
                 letterSpacing: '-0.01em',
                 borderLeft: '3px solid var(--accent-primary)',
-                paddingLeft: '0.6rem',
+                paddingLeft: '0.5rem',
                 margin: 0
               }}
             >
@@ -338,11 +333,11 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
           <h3
             key={`h3-${renderedElements.length}`}
             style={{
-              fontSize: '1.05rem',
+              fontSize: isChat ? '0.95rem' : '1.05rem',
               fontWeight: 600,
               color: 'var(--text-primary)',
-              marginTop: '1.25rem',
-              marginBottom: '0.5rem'
+              marginTop: '1rem',
+              marginBottom: '0.4rem'
             }}
           >
             🔹 {renderInline(h3Text)}
@@ -357,11 +352,11 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
           <h4
             key={`h4-${renderedElements.length}`}
             style={{
-              fontSize: '0.95rem',
+              fontSize: '0.9rem',
               fontWeight: 600,
               color: 'var(--text-secondary)',
-              marginTop: '1rem',
-              marginBottom: '0.4rem'
+              marginTop: '0.75rem',
+              marginBottom: '0.35rem'
             }}
           >
             {renderInline(h4Text)}
@@ -394,8 +389,8 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
                 width: '18px',
                 height: '18px',
                 borderRadius: '4px',
-                background: isChecked ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                border: isChecked ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.2)',
+                background: isChecked ? 'rgba(16, 185, 129, 0.2)' : 'var(--glass-bg)',
+                border: isChecked ? '1px solid #10b981' : '1px solid var(--glass-border)',
                 color: isChecked ? '#10b981' : 'transparent',
                 fontSize: '0.75rem',
                 fontWeight: 'bold',
@@ -405,7 +400,7 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
             >
               {isChecked ? '✓' : ''}
             </span>
-            <span style={{ color: isChecked ? 'var(--text-secondary)' : 'var(--text-primary)', textDecoration: isChecked ? 'line-through' : 'none' }}>
+            <span style={{ color: isChecked ? 'var(--text-secondary)' : 'inherit', textDecoration: isChecked ? 'line-through' : 'none' }}>
               {renderInline(itemText)}
             </span>
           </div>
@@ -452,14 +447,14 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
         <div
           key={`quote-${renderedElements.length}`}
           style={{
-            margin: '0.75rem 0',
-            padding: '0.6rem 1rem',
-            borderLeft: '4px solid var(--accent-primary)',
+            margin: '0.65rem 0',
+            padding: '0.5rem 0.85rem',
+            borderLeft: '3px solid var(--accent-primary)',
             background: 'rgba(124, 58, 237, 0.08)',
             borderRadius: '0 6px 6px 0',
             color: 'var(--text-secondary)',
             fontStyle: 'italic',
-            fontSize: '0.92rem'
+            fontSize: '0.9rem'
           }}
         >
           {renderInline(quoteText)}
@@ -473,7 +468,7 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
 
     if (!trimmed) {
       // Empty line spacing
-      renderedElements.push(<div key={`space-${idx}`} style={{ height: '0.5rem' }} />);
+      renderedElements.push(<div key={`space-${idx}`} style={{ height: '0.4rem' }} />);
       return;
     }
 
@@ -482,9 +477,9 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
       <p
         key={`p-${renderedElements.length}`}
         style={{
-          margin: '0.4rem 0',
+          margin: '0.35rem 0',
           lineHeight: '1.65',
-          color: 'var(--text-primary)',
+          color: 'inherit',
           fontSize: '0.92rem'
         }}
       >
@@ -497,6 +492,15 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
   flushList();
   flushTable();
 
+  // If in chat mode or hideToolbar is requested, render directly without the outer container and tabs
+  if (isChat || hideToolbar) {
+    return (
+      <div className={`markdown-chat-body ${className}`} style={{ color: 'inherit', lineHeight: '1.6' }}>
+        {renderedElements}
+      </div>
+    );
+  }
+
   return (
     <div className={`rich-markdown-container ${className}`} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Top Format Switcher Tabs */}
@@ -508,16 +512,16 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
           gap: '0.5rem',
           marginBottom: '0.75rem',
           paddingBottom: '0.5rem',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+          borderBottom: '1px solid var(--glass-border)'
         }}
       >
         <div
           style={{
             display: 'inline-flex',
-            background: 'rgba(0, 0, 0, 0.3)',
+            background: 'var(--glass-bg)',
             borderRadius: '6px',
             padding: '2px',
-            border: '1px solid rgba(255, 255, 255, 0.08)'
+            border: '1px solid var(--glass-border)'
           }}
         >
           <button
@@ -563,12 +567,13 @@ const MarkdownRenderer = ({ content, title, className = '' }) => {
           className="markdown-formatted-body"
           style={{
             flex: 1,
-            background: 'rgba(15, 15, 26, 0.65)',
+            background: 'var(--glass-premium-bg)',
             border: '1px solid var(--glass-border)',
             borderRadius: '8px',
             padding: '1.5rem 1.75rem',
             overflowY: 'auto',
-            maxHeight: '680px'
+            maxHeight: '680px',
+            color: 'var(--text-primary)'
           }}
         >
           {renderedElements}

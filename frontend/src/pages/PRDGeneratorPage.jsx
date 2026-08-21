@@ -181,10 +181,7 @@ const PRDGeneratorPage = () => {
                 style={{
                   width: '100%',
                   padding: '0.75rem',
-                  borderRadius: '6px',
-                  background: 'rgba(0, 0, 0, 0.2)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: 'var(--text-primary)'
+                  borderRadius: '6px'
                 }}
               />
             </div>
@@ -203,9 +200,6 @@ const PRDGeneratorPage = () => {
                   width: '100%',
                   padding: '0.75rem',
                   borderRadius: '6px',
-                  background: 'rgba(0, 0, 0, 0.2)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: 'var(--text-primary)',
                   resize: 'vertical',
                   fontFamily: 'inherit'
                 }}
@@ -244,7 +238,7 @@ const PRDGeneratorPage = () => {
               </div>
             )}
           </div>
-          <hr style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '0 0 1rem 0' }} />
+          <hr style={{ borderColor: 'var(--glass-border)', margin: '0 0 1rem 0' }} />
 
           {successMsg && (
             <div className="alert-message info-alert" style={{ marginBottom: '1rem', padding: '0.5rem 1rem' }}>

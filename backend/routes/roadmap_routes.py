@@ -14,6 +14,7 @@ roadmap_bp = Blueprint("roadmap_bp", __name__)
 roadmap_service = RoadmapService()
 
 
+@roadmap_bp.route("/", methods=["GET"])
 @roadmap_bp.route("", methods=["GET"])
 @jwt_required()
 def get_roadmap():

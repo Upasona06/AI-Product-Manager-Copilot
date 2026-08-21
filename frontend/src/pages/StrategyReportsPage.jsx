@@ -279,7 +279,6 @@ const StrategyReportsPage = () => {
                   value={reportType}
                   onChange={(e) => setReportType(e.target.value)}
                   disabled={generating}
-                  style={{ background: '#0a0a12' }}
                 >
                   <option value="executive_summary">📰 Executive Summary</option>
                   <option value="product_strategy">📈 Product Strategy Report</option>

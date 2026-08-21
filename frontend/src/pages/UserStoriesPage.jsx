@@ -197,9 +197,6 @@ const UserStoriesPage = () => {
                     width: '100%',
                     padding: '0.75rem',
                     borderRadius: '6px',
-                    background: 'rgba(0, 0, 0, 0.2)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'var(--text-primary)',
                     cursor: 'pointer'
                   }}
                 >
@@ -233,10 +230,7 @@ const UserStoriesPage = () => {
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    borderRadius: '6px',
-                    background: 'rgba(0, 0, 0, 0.2)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'var(--text-primary)'
+                    borderRadius: '6px'
                   }}
                 />
               </div>
@@ -255,9 +249,6 @@ const UserStoriesPage = () => {
                     width: '100%',
                     padding: '0.75rem',
                     borderRadius: '6px',
-                    background: 'rgba(0, 0, 0, 0.2)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'var(--text-primary)',
                     resize: 'vertical',
                     fontFamily: 'inherit'
                   }}

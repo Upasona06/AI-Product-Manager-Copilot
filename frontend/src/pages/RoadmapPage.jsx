@@ -62,7 +62,8 @@ const RoadmapPage = () => {
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to retrieve roadmap items from server.");
+      const errMsg = err.response?.data?.error || "Failed to retrieve roadmap items from server.";
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
@@ -106,7 +107,7 @@ const RoadmapPage = () => {
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to communicate with server to update roadmap.");
+      setError(err.response?.data?.error || "Failed to communicate with server to update roadmap.");
     }
   };
 
@@ -151,7 +152,7 @@ const RoadmapPage = () => {
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to save release details to server.");
+      setError(err.response?.data?.error || "Failed to save release details to server.");
     }
   };
 
@@ -192,191 +193,156 @@ const RoadmapPage = () => {
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to save feature notes to server.");
+      setError(err.response?.data?.error || "Failed to save feature notes to server.");
     }
   };
 
   const handleGenerateRecommendations = async () => {
     setRecommendationLoading(true);
     setError(null);
+    setSuccessMsg(null);
     try {
       const response = await api.get(`/api/roadmap/recommendations?project_id=${user.project_id}`);
       if (response.data.success) {
-        setMilestones(response.data.data);
+        setMilestones(response.data.data || []);
         setActiveTab('milestones');
+        setSuccessMsg("Generated AI release milestone sequences based on prioritized requirements.");
+        setTimeout(() => setSuccessMsg(null), 4000);
       } else {
-        setError(response.data.error || "Failed to generate recommended milestones.");
+        setError(response.data.error || "Failed to generate recommendations.");
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch milestone recommendations from server.");
+      setError(err.response?.data?.error || "Failed to generate release recommendations.");
     } finally {
       setRecommendationLoading(false);
     }
   };
 
   const handleApplyRecommendations = async () => {
-    if (!window.confirm("This will overwrite your current roadmap horizons with the recommended milestone structure. Proceed?")) {
-      return;
-    }
-    setLoading(true);
     setError(null);
+    setSuccessMsg(null);
     try {
-      const horizonMapping = ['now', 'next', 'later'];
-      
-      for (let i = 0; i < milestones.length; i++) {
-        const milestone = milestones[i];
-        const targetHorizon = horizonMapping[i] || 'later';
-        
-        for (const featureId of milestone.feature_ids) {
-          await api.post('/api/roadmap/update', {
-            project_id: user.project_id,
-            prioritization_id: featureId,
-            horizon: targetHorizon,
-            milestone_name: milestone.name,
-            target_date: milestone.target_date,
-            notes: milestone.goal
-          });
-        }
+      const response = await api.post('/api/roadmap/apply-recommendations', {
+        project_id: user.project_id,
+        milestones: milestones
+      });
+      if (response.data.success) {
+        setSuccessMsg("Applied AI Milestone schedule directly to your active Roadmap.");
+        setActiveTab('board');
+        fetchRoadmapData();
+        setTimeout(() => setSuccessMsg(null), 4000);
+      } else {
+        setError(response.data.error || "Failed to apply recommendations.");
       }
-      
-      setSuccessMsg("Applied recommended milestones to your roadmap!");
-      await fetchRoadmapData();
-      setActiveTab('board');
-      setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err) {
       console.error(err);
-      setError("An error occurred while applying recommendations.");
-    } finally {
-      setLoading(false);
+      setError(err.response?.data?.error || "Failed to apply milestone sequence.");
     }
   };
 
-  const handleExportRoadmap = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(features, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `product_roadmap_${user?.project_id || 'export'}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-  };
-
-  // Filter features based on search and selected categories
+  // Filter features based on search & tags
   const filteredFeatures = features.filter(f => {
-    const matchesSearch = f.feature_name.toLowerCase().includes(search.toLowerCase()) || 
-                          (f.description && f.description.toLowerCase().includes(search.toLowerCase()));
-    
-    // Feature categories are mapped to ProcessedFeedback categories in the database
-    const category = f.processed_feedback?.category || '';
-    const matchesCategory = !categoryFilter || category === categoryFilter;
-    const matchesMoscow = !moscowFilter || f.moscow_category === moscowFilter;
-    
+    const matchesSearch = search === '' ||
+      (f.feature_name && f.feature_name.toLowerCase().includes(search.toLowerCase())) ||
+      (f.description && f.description.toLowerCase().includes(search.toLowerCase()));
+
+    const matchesCategory = categoryFilter === '' || (f.processed_feedback?.category === categoryFilter);
+    const matchesMoscow = moscowFilter === '' || f.moscow_category === moscowFilter;
+
     return matchesSearch && matchesCategory && matchesMoscow;
   });
 
-  // Group filtered features by horizon
-  const columns = {
-    now: filteredFeatures.filter(f => f.horizon === 'now'),
+  // Organize by horizon
+  const horizonColumns = {
+    now: filteredFeatures.filter(f => !f.horizon || f.horizon === 'now'),
     next: filteredFeatures.filter(f => f.horizon === 'next'),
     later: filteredFeatures.filter(f => f.horizon === 'later')
   };
 
-  // Calculate Metrics/KPIs
-  const totalPlanned = features.length;
-  
-  const mustHaves = features.filter(f => f.moscow_category === 'Must Have');
-  const mvpReadiness = mustHaves.length > 0 
-    ? Math.round((mustHaves.filter(f => f.horizon === 'now').length / mustHaves.length) * 100)
-    : 0;
-
-  const nowFeatures = features.filter(f => f.horizon === 'now');
-  const avgRoiNow = nowFeatures.length > 0
-    ? (nowFeatures.reduce((acc, curr) => acc + curr.roi_score, 0) / nowFeatures.length).toFixed(2)
-    : '0.00';
-
-  // Stacked progress distribution helper
-  const getMoscowDistribution = (colFeatures) => {
-    if (colFeatures.length === 0) return { must: 0, should: 0, could: 0, wont: 0 };
-    const counts = { must: 0, should: 0, could: 0, wont: 0 };
-    colFeatures.forEach(f => {
-      if (f.moscow_category === 'Must Have') counts.must++;
-      else if (f.moscow_category === 'Should Have') counts.should++;
-      else if (f.moscow_category === 'Could Have') counts.could++;
-      else counts.wont++;
-    });
-    const total = colFeatures.length;
-    return {
-      must: Math.round((counts.must / total) * 100),
-      should: Math.round((counts.should / total) * 100),
-      could: Math.round((counts.could / total) * 100),
-      wont: Math.round((counts.wont / total) * 100)
-    };
-  };
-
-  const getMoscowBadgeClass = (category) => {
-    switch (category) {
+  // Helper for status badge
+  const getMoscowBadgeClass = (cat) => {
+    switch (cat) {
       case 'Must Have': return 'priority-high';
       case 'Should Have': return 'priority-medium';
-      case 'Could Have': return 'priority-low';
+      case 'Could Have': return 'category-feature';
       default: return 'category-general';
     }
   };
 
+  // Calculate MoSCoW distribution percentages for progress bar
+  const getMoscowDistribution = (items) => {
+    if (!items.length) return { must: 0, should: 0, could: 0, wont: 0 };
+    const total = items.length;
+    const must = Math.round((items.filter(i => i.moscow_category === 'Must Have').length / total) * 100);
+    const should = Math.round((items.filter(i => i.moscow_category === 'Should Have').length / total) * 100);
+    const could = Math.round((items.filter(i => i.moscow_category === 'Could Have').length / total) * 100);
+    const wont = Math.round((items.filter(i => i.moscow_category === "Won't Have").length / total) * 100);
+    return { must, should, could, wont };
+  };
+
+  // Statistics KPI calculations
+  const totalPlanned = features.length;
+  const nowCount = horizonColumns.now.length;
+  const mustHaveNow = horizonColumns.now.filter(f => f.moscow_category === 'Must Have').length;
+  const mvpReadiness = nowCount > 0 ? Math.round((mustHaveNow / nowCount) * 100) : 0;
+  const avgRoiNow = nowCount > 0 
+    ? (horizonColumns.now.reduce((acc, curr) => acc + (parseFloat(curr.roi_score) || 0), 0) / nowCount).toFixed(1)
+    : 0;
+
   return (
     <div className="page-layout">
       {/* Header section */}
-      <div className="dashboard-header">
+      <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
         <div className="header-meta">
-          <h1 className="logo-text" style={{ fontSize: '2.4rem', WebkitTextFillColor: 'unset', color: 'var(--text-primary)', background: 'none' }}>
-            Product Roadmap Planner
-          </h1>
-          <div className="project-token">
-            Project Workspace ID: <code style={{ color: '#c084fc' }}>{user?.project_id}</code>
-          </div>
+          <h1>🗺️ Dynamic Product Roadmap</h1>
+          <p>Organize prioritized feedback into Now, Next, and Later release horizons with AI milestone grouping.</p>
         </div>
 
+        {/* Tab & Action Controls */}
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button
-            onClick={() => setActiveTab('board')}
-            className="action-btn"
-            style={{
-              background: activeTab === 'board' ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--glass-border)',
-              color: 'var(--text-primary)'
-            }}
-          >
-            🗺️ Roadmap Board
-          </button>
-          
-          <button
-            onClick={handleGenerateRecommendations}
-            disabled={recommendationLoading}
-            className="action-btn"
-            style={{
-              background: activeTab === 'milestones' ? 'var(--accent-primary)' : 'linear-gradient(to right, rgba(124, 58, 237, 0.15), rgba(59, 130, 246, 0.15))',
-              border: '1px solid rgba(124, 58, 237, 0.3)',
-              color: 'var(--text-primary)'
-            }}
-          >
-            {recommendationLoading ? (
-              <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', display: 'inline-block', margin: '0' }}></span>
-            ) : (
-              '💡'
-            )}
-            AI Recommendations
-          </button>
+          <div style={{ display: 'inline-flex', background: 'var(--glass-bg)', padding: '0.25rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--glass-border)' }}>
+            <button
+              onClick={() => setActiveTab('board')}
+              style={{
+                background: activeTab === 'board' ? 'var(--accent-primary)' : 'transparent',
+                color: activeTab === 'board' ? '#fff' : 'var(--text-secondary)',
+                border: 'none',
+                padding: '0.45rem 1rem',
+                borderRadius: '4px',
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              📋 Horizon Board
+            </button>
+            <button
+              onClick={() => setActiveTab('milestones')}
+              style={{
+                background: activeTab === 'milestones' ? 'var(--accent-primary)' : 'transparent',
+                color: activeTab === 'milestones' ? '#fff' : 'var(--text-secondary)',
+                border: 'none',
+                padding: '0.45rem 1rem',
+                borderRadius: '4px',
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              💡 AI Milestone Sequences
+            </button>
+          </div>
 
           <button
-            onClick={handleExportRoadmap}
+            onClick={handleGenerateRecommendations}
+            disabled={recommendationLoading || features.length === 0}
             className="action-btn"
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--glass-border)',
-              color: 'var(--text-primary)'
-            }}
+            style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
           >
-            📥 Export JSON
+            {recommendationLoading ? "✨ Grouping Releases..." : "✨ AI Group Milestones"}
           </button>
         </div>
       </div>
@@ -403,7 +369,7 @@ const RoadmapPage = () => {
           <div className="metric-icon">🔥</div>
           <div className="metric-data">
             <span className="metric-value">{avgRoiNow}</span>
-            <span className="metric-label">Avg ROI Score (Now Horizon)</span>
+            <span className="metric-label">Avg ROI Score (Now)</span>
           </div>
         </div>
       </div>
@@ -419,7 +385,7 @@ const RoadmapPage = () => {
             style={{
               padding: '0.5rem 1rem',
               borderRadius: 'var(--border-radius-sm)',
-              background: 'rgba(255, 255, 255, 0.05)',
+              background: 'var(--bg-secondary)',
               border: '1px solid var(--glass-border)',
               color: 'var(--text-primary)',
               minWidth: '240px',
@@ -433,7 +399,7 @@ const RoadmapPage = () => {
             style={{
               padding: '0.5rem 1rem',
               borderRadius: 'var(--border-radius-sm)',
-              background: '#0f0f1a',
+              background: 'var(--bg-secondary)',
               border: '1px solid var(--glass-border)',
               color: 'var(--text-primary)',
               cursor: 'pointer'
@@ -453,7 +419,7 @@ const RoadmapPage = () => {
             style={{
               padding: '0.5rem 1rem',
               borderRadius: 'var(--border-radius-sm)',
-              background: '#0f0f1a',
+              background: 'var(--bg-secondary)',
               border: '1px solid var(--glass-border)',
               color: 'var(--text-primary)',
               cursor: 'pointer'
@@ -481,18 +447,19 @@ const RoadmapPage = () => {
         </div>
       )}
 
+      {/* Main Roadmap Content */}
       {loading ? (
-        <div className="loader-container">
-          <div className="spinner"></div>
-          <p style={{ color: 'var(--text-secondary)' }}>Loading roadmap pipelines...</p>
+        <div style={{ textAlign: 'center', padding: '5rem 0', color: 'var(--text-muted)' }}>
+          <div className="spinner" style={{ margin: '0 auto 1.5rem auto' }}></div>
+          <p>Loading roadmap plans and feature release horizons...</p>
         </div>
       ) : activeTab === 'board' ? (
-        /* Roadmap Board Tab */
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+        /* Kanban Board for Now / Next / Later */
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.75rem', alignItems: 'flex-start' }}>
           {['now', 'next', 'later'].map(col => {
-            const list = columns[col];
+            const list = horizonColumns[col] || [];
+            const target = releaseTargets[col] || {};
             const dist = getMoscowDistribution(list);
-            const target = releaseTargets[col];
 
             return (
               <div 
@@ -503,7 +470,7 @@ const RoadmapPage = () => {
                   flexDirection: 'column', 
                   minHeight: '650px', 
                   padding: '1.5rem',
-                  background: 'rgba(255, 255, 255, 0.015)'
+                  background: 'var(--glass-bg)'
                 }}
               >
                 {/* Column header */}
@@ -528,7 +495,7 @@ const RoadmapPage = () => {
                   {/* Column Metadata / Targets */}
                   <div style={{ marginTop: '0.75rem' }}>
                     {target.editing ? (
-                      <div className="standard-form" style={{ gap: '0.5rem', background: '#0a0a12', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', marginTop: '0.5rem' }}>
+                      <div className="standard-form" style={{ gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--glass-border)', marginTop: '0.5rem' }}>
                         <input
                           type="text"
                           placeholder="Release version (e.g. v1.0)"
@@ -580,7 +547,7 @@ const RoadmapPage = () => {
                         </div>
                       </div>
                     ) : (
-                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.6rem 0.8rem', borderRadius: 'var(--border-radius-sm)', marginTop: '0.5rem', border: '1px solid rgba(255,255,255,0.03)' }}>
+                      <div style={{ background: 'var(--glass-bg)', padding: '0.6rem 0.8rem', borderRadius: 'var(--border-radius-sm)', marginTop: '0.5rem', border: '1px solid var(--glass-border)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)' }}>
                             {target.milestone_name || 'No Target Release'}
@@ -590,7 +557,7 @@ const RoadmapPage = () => {
                           </span>
                         </div>
                         {target.notes && (
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.25rem' }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem', borderTop: '1px solid var(--glass-border)', paddingTop: '0.25rem' }}>
                             {target.notes}
                           </div>
                         )}
@@ -623,7 +590,7 @@ const RoadmapPage = () => {
                         <span>Composition Breakdown</span>
                         <span>M/S/C</span>
                       </div>
-                      <div style={{ display: 'flex', height: '6px', borderRadius: '3px', overflow: 'hidden', background: '#202030' }}>
+                      <div style={{ display: 'flex', height: '6px', borderRadius: '3px', overflow: 'hidden', background: 'var(--glass-border)' }}>
                         <div style={{ width: `${dist.must}%`, background: '#ef4444' }} title={`Must Have: ${dist.must}%`}></div>
                         <div style={{ width: `${dist.should}%`, background: '#f59e0b' }} title={`Should Have: ${dist.should}%`}></div>
                         <div style={{ width: `${dist.could}%`, background: '#3b82f6' }} title={`Could Have: ${dist.could}%`}></div>
@@ -661,7 +628,8 @@ const RoadmapPage = () => {
                         }}
                         style={{ 
                           padding: '1.1rem', 
-                          background: 'rgba(255, 255, 255, 0.02)', 
+                          background: 'var(--bg-secondary)', 
+                          border: '1px solid var(--glass-border)',
                           cursor: 'pointer',
                           borderRadius: 'var(--border-radius-sm)'
                         }}
@@ -692,7 +660,7 @@ const RoadmapPage = () => {
                             display: 'flex', 
                             justifyContent: 'space-between', 
                             alignItems: 'center', 
-                            borderTop: '1px solid rgba(255, 255, 255, 0.04)', 
+                            borderTop: '1px solid var(--glass-border)', 
                             paddingTop: '0.6rem' 
                           }}
                           onClick={(e) => e.stopPropagation()} // Stop modal from triggering
@@ -704,7 +672,7 @@ const RoadmapPage = () => {
                             style={{
                               padding: '0.2rem 0.5rem',
                               borderRadius: '4px',
-                              background: '#0f0f1a',
+                              background: 'var(--bg-secondary)',
                               border: '1px solid var(--glass-border)',
                               color: 'var(--text-primary)',
                               fontSize: '0.78rem',
@@ -728,7 +696,7 @@ const RoadmapPage = () => {
         /* Milestone Recommendations Tab */
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderLeft: '4px solid var(--accent-primary)', marginBottom: '2rem', background: 'rgba(124,58,237,0.03)' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#c084fc' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--accent-primary)' }}>
               💡 Copilot Release Milestone Sequences
             </h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: '0' }}>
@@ -746,16 +714,16 @@ const RoadmapPage = () => {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             {milestones.map((m, index) => (
-              <div key={index} className="glass-panel" style={{ border: '1px solid rgba(255,255,255,0.04)', background: 'rgba(255,255,255,0.01)' }}>
+              <div key={index} className="glass-panel" style={{ border: '1px solid var(--glass-border)', background: 'var(--glass-bg)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <span className="badge priority-low" style={{ textTransform: 'none', background: 'rgba(192, 132, 252, 0.1)', color: '#c084fc' }}>
+                  <span className="badge priority-low" style={{ textTransform: 'none', background: 'rgba(124, 58, 237, 0.1)', color: 'var(--accent-primary)' }}>
                     Release Horizon: {m.target_date}
                   </span>
                   <h3 style={{ fontSize: '1.3rem', fontWeight: '700' }}>{m.name}</h3>
                 </div>
 
-                <div style={{ background: '#0a0a12', padding: '1rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid rgba(255,255,255,0.03)', marginBottom: '1.25rem' }}>
-                  <strong style={{ color: '#c084fc', fontSize: '0.85rem' }}>Core Release Goal:</strong>
+                <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--glass-border)', marginBottom: '1.25rem' }}>
+                  <strong style={{ color: 'var(--accent-primary)', fontSize: '0.85rem' }}>Core Release Goal:</strong>
                   <p style={{ color: 'var(--text-primary)', fontSize: '0.92rem', margin: '0.25rem 0 0 0' }}>{m.goal}</p>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.5rem' }}>
                     {m.description}
@@ -771,7 +739,7 @@ const RoadmapPage = () => {
                     const featureObj = features.find(f => f.prioritization_id === fid);
                     if (!featureObj) return null;
                     return (
-                      <div key={fid} style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.03)', padding: '0.75rem 1rem', borderRadius: 'var(--border-radius-sm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div key={fid} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', padding: '0.75rem 1rem', borderRadius: 'var(--border-radius-sm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                           <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>{featureObj.feature_name}</div>
                           <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>ROI: {featureObj.roi_score} | RICE: {featureObj.rice_score}</div>
@@ -789,7 +757,7 @@ const RoadmapPage = () => {
         </div>
       )}
 
-      {/* Feature Details Modal Overlay */}
+      {/* Feature Detailed Inspection & Notes Modal */}
       {selectedFeature && (
         <div 
           onClick={() => setSelectedFeature(null)}
@@ -799,7 +767,7 @@ const RoadmapPage = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(5, 5, 8, 0.8)',
+            background: 'rgba(5, 5, 8, 0.75)',
             backdropFilter: 'blur(8px)',
             zIndex: 1000,
             display: 'flex',
@@ -816,9 +784,10 @@ const RoadmapPage = () => {
               maxWidth: '750px',
               maxHeight: '90vh',
               overflowY: 'auto',
-              background: '#0d0d18',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--glass-border)',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+              color: 'var(--text-primary)'
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>
@@ -846,7 +815,7 @@ const RoadmapPage = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
-                <h4 style={{ color: '#c084fc', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Requirement Description</h4>
+                <h4 style={{ color: 'var(--accent-primary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Requirement Description</h4>
                 <p style={{ color: 'var(--text-primary)', fontSize: '0.95rem', lineHeight: '1.5' }}>
                   {selectedFeature.description || "No description provided."}
                 </p>
@@ -854,41 +823,41 @@ const RoadmapPage = () => {
 
               {/* RICE metrics breakdown */}
               <div>
-                <h4 style={{ color: '#c084fc', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Prioritization Scoring Breakdown</h4>
+                <h4 style={{ color: 'var(--accent-primary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Prioritization Scoring Breakdown</h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem' }}>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid rgba(255,255,255,0.03)', textAlign: 'center' }}>
+                  <div style={{ background: 'var(--glass-bg)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--glass-border)', textAlign: 'center' }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>RICE Reach (Weight)</div>
                     <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '0.2rem' }}>{selectedFeature.rice_reach || 1}</div>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid rgba(255,255,255,0.03)', textAlign: 'center' }}>
+                  <div style={{ background: 'var(--glass-bg)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--glass-border)', textAlign: 'center' }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>RICE Impact</div>
                     <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '0.2rem' }}>{selectedFeature.rice_impact}</div>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid rgba(255,255,255,0.03)', textAlign: 'center' }}>
+                  <div style={{ background: 'var(--glass-bg)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--glass-border)', textAlign: 'center' }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>RICE Confidence</div>
                     <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '0.2rem' }}>{selectedFeature.rice_confidence}%</div>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid rgba(255,255,255,0.03)', textAlign: 'center' }}>
+                  <div style={{ background: 'var(--glass-bg)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--glass-border)', textAlign: 'center' }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>RICE Effort</div>
                     <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '0.2rem' }}>{selectedFeature.rice_effort}</div>
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                  <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid rgba(16, 185, 129, 0.15)', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.75rem', color: '#a7f3d0' }}>Return on Investment (ROI)</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: '700', color: '#10b981', marginTop: '0.2rem' }}>{selectedFeature.roi_score}</div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.08)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid rgba(16, 185, 129, 0.2)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-success)' }}>Return on Investment (ROI)</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: '700', color: 'var(--color-success)', marginTop: '0.2rem' }}>{selectedFeature.roi_score}</div>
                   </div>
-                  <div style={{ background: 'rgba(124, 58, 237, 0.05)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid rgba(124, 58, 237, 0.15)', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.75rem', color: '#c084fc' }}>Overall Priority Score</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: '700', color: '#a78bfa', marginTop: '0.2rem' }}>{selectedFeature.priority_score}</div>
+                  <div style={{ background: 'rgba(124, 58, 237, 0.08)', padding: '0.75rem', borderRadius: 'var(--border-radius-sm)', border: '1px solid rgba(124, 58, 237, 0.2)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-primary)' }}>Overall Priority Score</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: '700', color: 'var(--accent-primary)', marginTop: '0.2rem' }}>{selectedFeature.priority_score}</div>
                   </div>
                 </div>
               </div>
 
               <div>
-                <h4 style={{ color: '#c084fc', fontSize: '0.9rem', marginBottom: '0.5rem' }}>AI Copilot Strategic Recommendation</h4>
-                <div style={{ background: 'rgba(255, 255, 255, 0.01)', border: '1px solid var(--glass-border)', padding: '1rem', borderRadius: 'var(--border-radius-sm)', fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                <h4 style={{ color: 'var(--accent-primary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>AI Copilot Strategic Recommendation</h4>
+                <div style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', padding: '1rem', borderRadius: 'var(--border-radius-sm)', fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
                   {selectedFeature.business_recommendation || "No recommendation available."}
                 </div>
               </div>

@@ -228,7 +228,7 @@ const AssistantPage = () => {
         <aside className="assistant-history-sidebar glass-panel-premium">
           <div className="history-sidebar-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <MessageSquare size={18} color="#c084fc" />
+              <MessageSquare size={18} color="var(--accent-primary)" />
               <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 600 }}>Saved Chats ({historyList.length})</h3>
             </div>
             <button
@@ -241,7 +241,7 @@ const AssistantPage = () => {
             </button>
           </div>
 
-          <hr style={{ borderColor: 'rgba(255,255,255,0.06)', margin: '0.75rem 0 1rem 0' }} />
+          <hr style={{ borderColor: 'var(--glass-border)', margin: '0.75rem 0 1rem 0' }} />
 
           {/* History List */}
           <div className="history-sessions-list">
@@ -347,7 +347,7 @@ const AssistantPage = () => {
                     {/* Message body */}
                     <div className="bubble-body-text">
                       {msg.sender === 'ai' ? (
-                        <MarkdownRenderer content={msg.text} />
+                        <MarkdownRenderer content={msg.text} isChat={true} />
                       ) : (
                         <span>{msg.text}</span>
                       )}
@@ -389,7 +389,7 @@ const AssistantPage = () => {
                   {/* Demo Card */}
                   <div className="prompt-card highlight-card" onClick={handleExampleQuery}>
                     <div className="prompt-card-meta">
-                      <HelpCircle size={16} color="#c084fc" />
+                      <HelpCircle size={16} color="var(--accent-primary)" />
                       <span className="card-badge">Demo Query</span>
                     </div>
                     <h4 className="prompt-card-title">"What are the top 3 features requested by users?"</h4>
@@ -404,7 +404,7 @@ const AssistantPage = () => {
                   {suggestedPrompts.map((prompt, idx) => (
                     <div key={idx} className="prompt-card" onClick={() => setInputText(prompt)}>
                       <div className="prompt-card-meta">
-                        <Sparkles size={14} color="#a78bfa" />
+                        <Sparkles size={14} color="var(--accent-primary)" />
                         <span className="card-badge">Quick Prompt</span>
                       </div>
                       <h4 className="prompt-card-title">{prompt}</h4>
@@ -431,7 +431,7 @@ const AssistantPage = () => {
               {attachedFile && (
                 <div className="chat-input-attachment-preview">
                   <div className="attachment-preview-badge">
-                    <FileText size={14} color="#c084fc" />
+                    <FileText size={14} color="var(--accent-primary)" />
                     <span className="attachment-file-label">{attachedFile.name}</span>
                     <button onClick={() => setAttachedFile(null)} className="remove-attachment-btn" title="Remove attachment">
                       <X size={14} />
@@ -510,12 +510,27 @@ const AssistantPage = () => {
         }
 
         .glass-panel-premium {
-          background: rgba(15, 15, 26, 0.45);
+          background: var(--glass-premium-bg);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          border: 1px solid var(--glass-border);
           border-radius: 16px;
-          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+          transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        :root[data-theme='light'] .glass-panel-premium {
+          background: #ffffff;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.04), 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .glass-panel-premium {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.04), 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+          }
         }
 
         /* History Sidebar */
@@ -539,18 +554,20 @@ const AssistantPage = () => {
           gap: 0.35rem;
           background: var(--accent-primary);
           border: none;
-          color: #fff;
-          padding: 0.4rem 0.75rem;
-          border-radius: 6px;
+          color: #ffffff;
+          padding: 0.45rem 0.85rem;
+          border-radius: 8px;
           font-size: 0.8rem;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 2px 8px var(--accent-glow);
         }
 
         .new-chat-action-btn:hover {
           background: var(--accent-secondary);
           transform: translateY(-1px);
+          box-shadow: 0 4px 12px var(--accent-glow);
         }
 
         .history-sessions-list {
@@ -566,15 +583,15 @@ const AssistantPage = () => {
           width: 4px;
         }
         .history-sessions-list::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
+          background: var(--glass-hover-border);
           border-radius: 4px;
         }
 
         .history-session-card {
           padding: 0.75rem 0.9rem;
-          border-radius: 8px;
-          background: rgba(0, 0, 0, 0.2);
-          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--glass-border);
           cursor: pointer;
           display: flex;
           align-items: center;
@@ -584,8 +601,33 @@ const AssistantPage = () => {
         }
 
         .history-session-card:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.07);
+          border-color: var(--glass-hover-border);
+        }
+
+        :root[data-theme='light'] .history-session-card {
+          background: #f8fafc;
+          border: 1px solid rgba(0, 0, 0, 0.06);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+
+        :root[data-theme='light'] .history-session-card:hover {
+          background: #ffffff;
+          border-color: rgba(124, 58, 237, 0.3);
+          box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .history-session-card {
+            background: #f8fafc;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+          }
+          :root[data-theme='default'] .history-session-card:hover {
+            background: #ffffff;
+            border-color: rgba(124, 58, 237, 0.3);
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
+          }
         }
 
         .active-session-card {
@@ -594,9 +636,24 @@ const AssistantPage = () => {
           border-left: 3px solid var(--accent-primary) !important;
         }
 
+        :root[data-theme='light'] .active-session-card {
+          background: rgba(124, 58, 237, 0.08) !important;
+          border-color: rgba(124, 58, 237, 0.35) !important;
+          border-left: 3px solid var(--accent-primary) !important;
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .active-session-card {
+            background: rgba(124, 58, 237, 0.08) !important;
+            border-color: rgba(124, 58, 237, 0.35) !important;
+            border-left: 3px solid var(--accent-primary) !important;
+          }
+        }
+
         .session-card-title {
           display: block;
           font-size: 0.88rem;
+          font-weight: 600;
           color: var(--text-primary);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -623,18 +680,34 @@ const AssistantPage = () => {
 
         .session-count-badge {
           background: rgba(255, 255, 255, 0.08);
-          padding: 0.1rem 0.4rem;
+          padding: 0.12rem 0.45rem;
           border-radius: 10px;
           color: #c4b5fd;
+          font-size: 0.7rem;
+          font-weight: 500;
+        }
+
+        :root[data-theme='light'] .session-count-badge {
+          background: rgba(124, 58, 237, 0.1);
+          color: var(--accent-primary);
+          font-weight: 600;
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .session-count-badge {
+            background: rgba(124, 58, 237, 0.1);
+            color: var(--accent-primary);
+            font-weight: 600;
+          }
         }
 
         .session-delete-btn {
           background: transparent;
           border: none;
-          color: rgba(255, 255, 255, 0.3);
+          color: var(--text-muted);
           cursor: pointer;
-          padding: 0.3rem;
-          border-radius: 4px;
+          padding: 0.35rem;
+          border-radius: 6px;
           transition: all 0.2s;
           display: flex;
           align-items: center;
@@ -659,7 +732,7 @@ const AssistantPage = () => {
           justify-content: space-between;
           align-items: center;
           padding: 1rem 1.5rem;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          border-bottom: 1px solid var(--glass-border);
         }
 
         .active-bot-badge {
@@ -670,7 +743,7 @@ const AssistantPage = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
+          box-shadow: 0 0 12px rgba(124, 58, 237, 0.35);
         }
 
         .chat-clear-btn {
@@ -678,18 +751,44 @@ const AssistantPage = () => {
           align-items: center;
           gap: 0.4rem;
           background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          border: 1px solid var(--glass-border);
           color: var(--text-secondary);
           padding: 0.4rem 0.8rem;
-          border-radius: 6px;
+          border-radius: 8px;
           font-size: 0.8rem;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
         }
 
         .chat-clear-btn:hover {
-          color: #fff;
-          background: rgba(255, 255, 255, 0.08);
+          color: var(--text-primary);
+          background: var(--glass-hover-border);
+        }
+
+        :root[data-theme='light'] .chat-clear-btn {
+          background: #f8fafc;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          color: var(--text-secondary);
+        }
+
+        :root[data-theme='light'] .chat-clear-btn:hover {
+          color: var(--text-primary);
+          background: #f1f5f9;
+          border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .chat-clear-btn {
+            background: #f8fafc;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: var(--text-secondary);
+          }
+          :root[data-theme='default'] .chat-clear-btn:hover {
+            color: var(--text-primary);
+            background: #f1f5f9;
+            border-color: rgba(0, 0, 0, 0.15);
+          }
         }
 
         /* Feed */
@@ -712,7 +811,7 @@ const AssistantPage = () => {
           width: 5px;
         }
         .chat-scroll-viewport::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.08);
+          background: var(--glass-hover-border);
           border-radius: 4px;
         }
 
@@ -720,7 +819,7 @@ const AssistantPage = () => {
           display: flex;
           align-items: flex-start;
           gap: 0.75rem;
-          max-width: 90%;
+          max-width: 88%;
         }
 
         .align-left {
@@ -733,9 +832,9 @@ const AssistantPage = () => {
         }
 
         .bubble-avatar {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
+          width: 34px;
+          height: 34px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -744,10 +843,21 @@ const AssistantPage = () => {
 
         .avatar-bot {
           background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+          box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
         }
 
         .avatar-user {
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.12);
+        }
+
+        :root[data-theme='light'] .avatar-user {
+          background: #64748b;
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .avatar-user {
+            background: #64748b;
+          }
         }
 
         .chat-message-bubble {
@@ -759,24 +869,90 @@ const AssistantPage = () => {
 
         .bubble-style-ai {
           background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          border-top-left-radius: 2px;
+          border: 1px solid var(--glass-border);
+          border-top-left-radius: 3px;
+          color: var(--text-primary);
           flex: 1;
         }
 
+        :root[data-theme='light'] .bubble-style-ai {
+          background: #f8fafc;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          color: var(--text-primary);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .bubble-style-ai {
+            background: #f8fafc;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: var(--text-primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+          }
+        }
+
         .bubble-style-user {
-          background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(147, 51, 234, 0.12) 100%);
+          background: linear-gradient(135deg, rgba(124, 58, 237, 0.25) 0%, rgba(147, 51, 234, 0.15) 100%);
+          border: 1px solid rgba(124, 58, 237, 0.35);
+          border-top-right-radius: 3px;
+          color: #ffffff;
+        }
+
+        :root[data-theme='light'] .bubble-style-user {
+          background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
           border: 1px solid rgba(124, 58, 237, 0.3);
-          border-top-right-radius: 2px;
-          color: #fff;
+          border-top-right-radius: 3px;
+          color: #ffffff;
+          box-shadow: 0 2px 10px rgba(124, 58, 237, 0.2);
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .bubble-style-user {
+            background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-top-right-radius: 3px;
+            color: #ffffff;
+            box-shadow: 0 2px 10px rgba(124, 58, 237, 0.2);
+          }
         }
 
         .bubble-timestamp {
           display: block;
           font-size: 0.7rem;
-          color: rgba(255, 255, 255, 0.35);
+          color: var(--text-muted);
           text-align: right;
           margin-top: 0.35rem;
+        }
+
+        .bubble-style-user .bubble-timestamp {
+          color: rgba(255, 255, 255, 0.75);
+        }
+
+        .bubble-attachment-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          background: rgba(124, 58, 237, 0.15);
+          border: 1px solid rgba(124, 58, 237, 0.3);
+          padding: 0.25rem 0.6rem;
+          border-radius: 6px;
+          font-size: 0.78rem;
+          color: #c084fc;
+          margin-bottom: 0.6rem;
+        }
+
+        :root[data-theme='light'] .bubble-attachment-badge {
+          background: rgba(124, 58, 237, 0.1);
+          border: 1px solid rgba(124, 58, 237, 0.25);
+          color: var(--accent-primary);
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .bubble-attachment-badge {
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            color: var(--accent-primary);
+          }
         }
 
         /* Suggestions */
@@ -788,23 +964,67 @@ const AssistantPage = () => {
         }
 
         .prompt-card {
-          background: rgba(0, 0, 0, 0.25);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          border-radius: 10px;
-          padding: 1rem;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid var(--glass-border);
+          border-radius: 12px;
+          padding: 1.1rem;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: all 0.25s ease;
+          display: flex;
+          flex-direction: column;
         }
 
         .prompt-card:hover {
-          background: rgba(124, 58, 237, 0.1);
-          border-color: rgba(124, 58, 237, 0.3);
+          background: rgba(124, 58, 237, 0.08);
+          border-color: rgba(124, 58, 237, 0.35);
           transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        :root[data-theme='light'] .prompt-card {
+          background: #ffffff;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+
+        :root[data-theme='light'] .prompt-card:hover {
+          background: #ffffff;
+          border-color: rgba(124, 58, 237, 0.4);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(124, 58, 237, 0.12);
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .prompt-card {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+          }
+          :root[data-theme='default'] .prompt-card:hover {
+            background: #ffffff;
+            border-color: rgba(124, 58, 237, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.12);
+          }
         }
 
         .highlight-card {
-          border-color: rgba(124, 58, 237, 0.3);
+          border-color: rgba(124, 58, 237, 0.35);
           background: rgba(124, 58, 237, 0.08);
+        }
+
+        :root[data-theme='light'] .highlight-card {
+          background: linear-gradient(135deg, rgba(124, 58, 237, 0.06) 0%, rgba(168, 85, 247, 0.03) 100%);
+          border: 1px solid rgba(124, 58, 237, 0.25);
+          box-shadow: 0 2px 10px rgba(124, 58, 237, 0.06);
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .highlight-card {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.06) 0%, rgba(168, 85, 247, 0.03) 100%);
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            box-shadow: 0 2px 10px rgba(124, 58, 237, 0.06);
+          }
         }
 
         .prompt-card-meta {
@@ -822,9 +1042,22 @@ const AssistantPage = () => {
           font-weight: 600;
         }
 
+        :root[data-theme='light'] .card-badge {
+          color: var(--accent-primary);
+          font-weight: 700;
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .card-badge {
+            color: var(--accent-primary);
+            font-weight: 700;
+          }
+        }
+
         .prompt-card-title {
           margin: 0 0 0.4rem 0;
           font-size: 0.9rem;
+          font-weight: 600;
           color: var(--text-primary);
         }
 
@@ -833,6 +1066,7 @@ const AssistantPage = () => {
           font-size: 0.78rem;
           color: var(--text-secondary);
           line-height: 1.4;
+          flex: 1;
         }
 
         .prompt-card-action {
@@ -842,13 +1076,28 @@ const AssistantPage = () => {
           font-size: 0.75rem;
           color: var(--accent-primary);
           font-weight: 600;
+          margin-top: auto;
         }
 
         /* Sticky Input */
         .chat-input-sticky-panel {
           padding: 1rem 1.5rem;
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
-          background: rgba(10, 10, 18, 0.6);
+          border-top: 1px solid var(--glass-border);
+          background: rgba(10, 10, 18, 0.7);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+        }
+
+        :root[data-theme='light'] .chat-input-sticky-panel {
+          border-top: 1px solid rgba(0, 0, 0, 0.06);
+          background: rgba(255, 255, 255, 0.85);
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .chat-input-sticky-panel {
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            background: rgba(255, 255, 255, 0.85);
+          }
         }
 
         .chat-input-form {
@@ -856,17 +1105,47 @@ const AssistantPage = () => {
           align-items: center;
           gap: 0.75rem;
           background: rgba(0, 0, 0, 0.3);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid var(--glass-border);
           border-radius: 12px;
           padding: 0.4rem 0.6rem;
+          transition: all 0.2s ease;
+        }
+
+        .chat-input-form:focus-within {
+          border-color: var(--accent-primary);
+          box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        :root[data-theme='light'] .chat-input-form {
+          background: #ffffff;
+          border: 1px solid rgba(0, 0, 0, 0.12);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        :root[data-theme='light'] .chat-input-form:focus-within {
+          border-color: var(--accent-primary);
+          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .chat-input-form {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+          }
+          :root[data-theme='default'] .chat-input-form:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+          }
         }
 
         .chat-textarea-box {
           flex: 1;
-          background: transparent;
-          border: none;
-          outline: none;
-          color: var(--text-primary);
+          background: transparent !important;
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+          color: var(--text-primary) !important;
           font-size: 0.92rem;
           padding: 0.5rem;
         }
@@ -889,23 +1168,38 @@ const AssistantPage = () => {
         }
 
         .clip-btn:hover {
-          color: #fff;
-          background: rgba(255, 255, 255, 0.08);
+          color: var(--text-primary);
+          background: var(--glass-hover-border);
+        }
+
+        :root[data-theme='light'] .clip-btn:hover {
+          color: var(--text-primary);
+          background: rgba(0, 0, 0, 0.05);
+        }
+
+        @media (prefers-color-scheme: light) {
+          :root[data-theme='default'] .clip-btn:hover {
+            color: var(--text-primary);
+            background: rgba(0, 0, 0, 0.05);
+          }
         }
 
         .send-btn-gradient {
           background: var(--accent-primary);
           color: #fff;
+          box-shadow: 0 2px 8px var(--accent-glow);
         }
 
         .send-btn-gradient:hover:not(:disabled) {
           background: var(--accent-secondary);
           transform: scale(1.05);
+          box-shadow: 0 4px 12px var(--accent-glow);
         }
 
         .send-btn-gradient:disabled {
           opacity: 0.4;
           cursor: not-allowed;
+          box-shadow: none;
         }
 
         /* Typing Dots */
@@ -925,6 +1219,9 @@ const AssistantPage = () => {
           border-radius: 50%;
           background: #c084fc;
           animation: pulse 1.4s infinite ease-in-out both;
+        }
+        :root[data-theme='light'] .loading-dot-pulse {
+          background: var(--accent-primary);
         }
         .loading-dot-pulse:nth-child(1) { animation-delay: -0.32s; }
         .loading-dot-pulse:nth-child(2) { animation-delay: -0.16s; }
