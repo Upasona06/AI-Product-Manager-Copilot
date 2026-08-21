@@ -98,6 +98,20 @@ const Navbar = ({ isCollapsed, onToggle }) => {
               💬 AI Assistant
             </Link>
 
+            <Link
+              to="/roadmap"
+              className={`navbar-link-item ${isActive('/roadmap')}`}
+            >
+              🗺️ Roadmap Planner
+            </Link>
+
+            <Link
+              to="/reports"
+              className={`navbar-link-item ${isActive('/reports')}`}
+            >
+              📈 Strategy Reports
+            </Link>
+
 
           </>
         )}

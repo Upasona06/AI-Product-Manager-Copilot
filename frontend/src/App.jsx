@@ -18,6 +18,8 @@ import PRDGeneratorPage from './pages/PRDGeneratorPage';
 import AssistantPage from './pages/AssistantPage';
 import UserStoriesPage from './pages/UserStoriesPage';
 import SettingsPage from './pages/SettingsPage';
+import RoadmapPage from './pages/RoadmapPage';
+import StrategyReportsPage from './pages/StrategyReportsPage';
 
 function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => {
@@ -142,6 +144,23 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/roadmap"
+                element={
+                  <ProtectedRoute allowedRoles={['product_manager']}>
+                    <RoadmapPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports"
+                element={
+                  <ProtectedRoute allowedRoles={['product_manager']}>
+                    <StrategyReportsPage />
+                  </ProtectedRoute>
+                }
+              />
+
 
 
               {/* Protected Combined Routes (PM & Customer) */}

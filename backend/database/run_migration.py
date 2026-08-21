@@ -28,8 +28,11 @@ def run_migration():
         "add_classified_feedback.sql", 
         "add_aggregated_features.sql",
         "add_user_stories.sql",
-        "add_assistant_chats.sql"
+        "add_assistant_chats.sql",
+        "add_roadmap_tables.sql",
+        "add_reports_table.sql"
     ]
+
     
     # Verify all migration files exist before starting
     for filename in migration_files:

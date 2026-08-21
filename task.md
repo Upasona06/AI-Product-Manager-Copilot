@@ -1,0 +1,14 @@
+- [x] Create database migration for `product_reports` table
+- [x] Run migration script to create database table
+- [x] Implement `ProductReport` database model
+- [x] Register new model in `backend/models/__init__.py`
+- [x] Implement `ReportService` with AI prompt design and heuristic fallback reports
+- [x] Implement `report_routes.py` blueprint endpoints
+- [x] Register blueprint in `backend/app.py`
+- [x] Export blueprint in `backend/routes/__init__.py`
+- [x] Write unittest suite in `backend/test_reports.py` and run it
+- [x] Implement frontend `StrategyReportsPage.jsx` component
+- [x] Add route to `frontend/src/App.jsx`
+- [x] Add sidebar link to `frontend/src/components/Navbar.jsx`
+- [x] Verify frontend compiles successfully
+- [x] Create walkthrough documentation

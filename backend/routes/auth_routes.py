@@ -33,40 +33,40 @@ def register():
             "error": "Invalid role. Role must be 'product_manager' or 'customer'."
         }), 400
         
-    # Check if user already exists
-    existing_user = User.query.filter_by(email=email).first()
-    if existing_user:
-        return jsonify({
-            "success": False,
-            "error": "Email is already registered."
-        }), 409
-        
-    # Hash password using bcrypt
-    password_bytes = password.encode('utf-8')
-    salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
-    
-    # Default project ID — all users share this project for single-tenant testing
-    DEFAULT_PROJECT_ID = uuid.UUID("550e8400-e29b-41d4-a716-446655440000")
-
-    # Customers are ALWAYS assigned to the default project regardless of input.
-    # PMs may optionally specify a custom project_id; if not provided, use default.
-    if role == "customer":
-        project_uuid = DEFAULT_PROJECT_ID
-    else:
-        # product_manager
-        if project_id_str and project_id_str.strip():
-            try:
-                project_uuid = uuid.UUID(project_id_str.strip())
-            except ValueError:
-                return jsonify({
-                    "success": False,
-                    "error": "Invalid project_id format. Must be a valid UUID."
-                }), 400
-        else:
-            project_uuid = DEFAULT_PROJECT_ID
-            
     try:
+        # Check if user already exists
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            return jsonify({
+                "success": False,
+                "error": "Email is already registered."
+            }), 409
+            
+        # Hash password using bcrypt
+        password_bytes = password.encode('utf-8')
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
+        
+        # Default project ID — all users share this project for single-tenant testing
+        DEFAULT_PROJECT_ID = uuid.UUID("550e8400-e29b-41d4-a716-446655440000")
+
+        # Customers are ALWAYS assigned to the default project regardless of input.
+        # PMs may optionally specify a custom project_id; if not provided, use default.
+        if role == "customer":
+            project_uuid = DEFAULT_PROJECT_ID
+        else:
+            # product_manager
+            if project_id_str and project_id_str.strip():
+                try:
+                    project_uuid = uuid.UUID(project_id_str.strip())
+                except ValueError:
+                    return jsonify({
+                        "success": False,
+                        "error": "Invalid project_id format. Must be a valid UUID."
+                    }), 400
+            else:
+                project_uuid = DEFAULT_PROJECT_ID
+                
         new_user = User(
             email=email,
             password_hash=hashed_password,
