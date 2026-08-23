@@ -245,3 +245,53 @@ Do not return any conversational text, markdown blocks, or leading/trailing comm
         db.session.commit()
         return updated_count
 
+    def apply_recommendations(self, project_id, milestones) -> bool:
+        """
+        Takes the 3 recommended milestones and maps their grouped features 
+        to 'now', 'next', and 'later' horizons in the roadmap.
+        """
+        import uuid
+        proj_uuid = uuid.UUID(str(project_id)) if isinstance(project_id, str) else project_id
+        
+        # Map milestone indices to standard horizons
+        horizon_mapping = {
+            0: "now",
+            1: "next",
+            2: "later"
+        }
+        
+        for index, milestone in enumerate(milestones):
+            horizon = horizon_mapping.get(index, "later")
+            milestone_name = milestone.get("name", "")
+            target_date = milestone.get("target_date", "")
+            notes = milestone.get("goal", "")
+            feature_ids = milestone.get("feature_ids", [])
+            
+            for fid_str in feature_ids:
+                try:
+                    fid = uuid.UUID(str(fid_str))
+                except ValueError:
+                    continue
+                    
+                item = RoadmapItem.query.filter_by(prioritization_id=fid).first()
+                
+                if item:
+                    item.horizon = horizon
+                    item.milestone_name = milestone_name
+                    item.target_date = target_date
+                    item.notes = notes
+                else:
+                    item = RoadmapItem(
+                        project_id=proj_uuid,
+                        prioritization_id=fid,
+                        horizon=horizon,
+                        milestone_name=milestone_name,
+                        target_date=target_date,
+                        notes=notes
+                    )
+                    db.session.add(item)
+                    
+        db.session.commit()
+        return True
+
+

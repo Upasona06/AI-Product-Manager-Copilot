@@ -6,8 +6,8 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load .env from project root (parent of backend/)
-env_path = Path(__file__).resolve().parent.parent / ".env"
+# Load .env from backend/ folder
+env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=env_path, override=True)
 print("Gemini Key Loaded:", bool(os.getenv("GEMINI_API_KEY")))
 from flask import Flask, jsonify

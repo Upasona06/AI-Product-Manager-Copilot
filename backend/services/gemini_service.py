@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-# Load env variables from project root .env
-env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+# Load env variables from backend/.env
+env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path, override=True)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
