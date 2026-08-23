@@ -199,3 +199,41 @@ def update_column_targets():
             "error": f"An error occurred while updating column targets: {str(e)}"
         }), 500
 
+
+@roadmap_bp.route("/apply-recommendations", methods=["POST"])
+@jwt_required()
+def apply_recommendations():
+    """Apply recommended milestones sequence to the active roadmap."""
+    claims = get_jwt()
+    role = claims.get("role")
+
+    if role != "product_manager":
+        return jsonify({
+            "success": False,
+            "error": "Forbidden: Only product managers can apply roadmap recommendations."
+        }), 403
+
+    data = request.get_json() or {}
+    project_id = data.get("project_id") or claims.get("project_id")
+    milestones = data.get("milestones")
+
+    if not milestones:
+        return jsonify({
+            "success": False,
+            "error": "Missing milestones parameters."
+        }), 400
+
+    try:
+        roadmap_service.apply_recommendations(project_id, milestones)
+        return jsonify({
+            "success": True,
+            "message": "Milestone recommendations applied successfully."
+        }), 200
+    except Exception as e:
+        logger.error(f"Failed to apply roadmap recommendations: {e}")
+        return jsonify({
+            "success": False,
+            "error": f"An error occurred while applying recommendations: {str(e)}"
+        }), 500
+
+

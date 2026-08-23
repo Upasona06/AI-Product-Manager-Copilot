@@ -705,11 +705,22 @@ const RoadmapPage = () => {
             </p>
             <button
               onClick={handleApplyRecommendations}
+              disabled={milestones.length === 0}
               className="action-btn"
-              style={{ alignSelf: 'start', marginTop: '0.5rem' }}
+              style={{ 
+                alignSelf: 'start', 
+                marginTop: '0.5rem',
+                opacity: milestones.length === 0 ? 0.6 : 1,
+                cursor: milestones.length === 0 ? 'not-allowed' : 'pointer'
+              }}
             >
               🚀 Apply Milestone Structure to Roadmap
             </button>
+            {milestones.length === 0 && (
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                💡 Click the <strong>✨ AI Group Milestones</strong> button at the top to generate sequences first.
+              </span>
+            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
