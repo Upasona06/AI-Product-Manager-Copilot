@@ -8,7 +8,12 @@ import uuid
 import json
 import unittest
 from dotenv import load_dotenv
-load_dotenv()
+from pathlib import Path
+root_env = Path(__file__).resolve().parent.parent / ".env"
+if root_env.exists():
+    load_dotenv(dotenv_path=root_env, override=True)
+else:
+    load_dotenv()
 from unittest.mock import MagicMock
 
 sys.modules['sentence_transformers'] = MagicMock()

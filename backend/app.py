@@ -6,9 +6,16 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load .env from backend/ folder
-env_path = Path(__file__).resolve().parent / ".env"
-load_dotenv(dotenv_path=env_path, override=True)
+# Load .env from root or backend folder
+root_env = Path(__file__).resolve().parent.parent / ".env"
+backend_env = Path(__file__).resolve().parent / ".env"
+
+if root_env.exists():
+    load_dotenv(dotenv_path=root_env, override=True)
+elif backend_env.exists():
+    load_dotenv(dotenv_path=backend_env, override=True)
+else:
+    load_dotenv(override=True)
 print("Gemini Key Loaded:", bool(os.getenv("GEMINI_API_KEY")))
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager

@@ -9,17 +9,17 @@ from nltk.corpus import stopwords
 # Ensure NLTK resources are available
 try:
     nltk.data.find('tokenizers/punkt')
-except LookupError:
+except Exception:
     nltk.download('punkt', quiet=True)
 
 try:
     nltk.data.find('tokenizers/punkt_tab')
-except LookupError:
+except Exception:
     nltk.download('punkt_tab', quiet=True)
 
 try:
     nltk.data.find('corpora/stopwords')
-except LookupError:
+except Exception:
     nltk.download('stopwords', quiet=True)
 
 # Pre-load stop words

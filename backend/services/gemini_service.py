@@ -5,21 +5,39 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-# Load env variables from backend/.env
-env_path = Path(__file__).resolve().parent.parent / ".env"
-load_dotenv(dotenv_path=env_path, override=True)
+# Load env variables from root or backend .env
+root_env = Path(__file__).resolve().parent.parent.parent / ".env"
+backend_env = Path(__file__).resolve().parent.parent / ".env"
+
+if root_env.exists():
+    load_dotenv(dotenv_path=root_env, override=True)
+elif backend_env.exists():
+    load_dotenv(dotenv_path=backend_env, override=True)
+else:
+    load_dotenv(override=True)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 print("Gemini Key Loaded:", bool(GEMINI_API_KEY))
 
 # Initialize the Gemini client (new SDK)
-gemini_model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+primary_model_name = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+FALLBACK_MODELS = [
+    primary_model_name,
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-flash-latest",
+    "gemini-3.7-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-2.5-flash"
+]
+MODELS_TO_TRY = list(dict.fromkeys(FALLBACK_MODELS))
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 
 def ask_gemini(prompt, system_instruction=None, json_mode=False):
     """
     Query Gemini AI with the given prompt using the new google-genai SDK.
+    Automatically retries with fallback models if a model is unavailable or hits rate limits.
     """
     if not GEMINI_API_KEY or not client:
         raise ValueError("GEMINI_API_KEY missing")
@@ -30,13 +48,30 @@ def ask_gemini(prompt, system_instruction=None, json_mode=False):
     if json_mode:
         config["response_mime_type"] = "application/json"
 
-    response = client.models.generate_content(
-        model=gemini_model_name,
-        contents=prompt,
-        config=config if config else None
-    )
+    import time
+    last_error = None
 
-    return response.text
+    for model_name in MODELS_TO_TRY:
+        for attempt in range(2):
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=config if config else None
+                )
+                return response.text
+            except Exception as e:
+                last_error = e
+                err_str = str(e).lower()
+                is_rate_limit = "429" in err_str or "resource_exhausted" in err_str or "quota" in err_str
+                print(f"[Gemini] Attempt {attempt + 1} with '{model_name}' failed: {e}")
+                if is_rate_limit:
+                    time.sleep(1.5)
+                    continue
+                else:
+                    break
+
+    raise last_error
 
 
 # ---------------------------------------------------------------------------
