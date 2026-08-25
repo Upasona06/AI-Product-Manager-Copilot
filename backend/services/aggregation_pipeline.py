@@ -62,7 +62,7 @@ class AggregationPipeline:
 
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
-        self.model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+        self.model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
         self.prompt_version = os.getenv("AGGREGATION_PROMPT_VERSION", "1.0.0")
 
         if not self.api_key:

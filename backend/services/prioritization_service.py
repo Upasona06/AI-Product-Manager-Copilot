@@ -163,7 +163,7 @@ class PrioritizationService:
         """
         Calls Gemini API to get structured prioritizations.
         """
-        model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+        model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.api_key}"
         
         prompt = f"""You are an expert product manager and business analyst.

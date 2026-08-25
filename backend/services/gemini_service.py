@@ -20,7 +20,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 print("Gemini Key Loaded:", bool(GEMINI_API_KEY))
 
 # Initialize the Gemini client (new SDK)
-primary_model_name = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+primary_model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 FALLBACK_MODELS = [
     primary_model_name,
     "gemini-3.6-flash",

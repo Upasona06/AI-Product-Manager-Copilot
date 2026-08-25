@@ -79,7 +79,7 @@ class ClassificationPipeline:
 
     def __init__(self):
         self.api_key = GEMINI_API_KEY
-        self.model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+        self.model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
         self.prompt_version = os.getenv("CLASSIFICATION_PROMPT_VERSION", "1.0.0")
         self.batch_size = int(os.getenv("CLASSIFICATION_BATCH_SIZE", 10))
 
