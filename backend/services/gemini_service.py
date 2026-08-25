@@ -256,13 +256,27 @@ def ask_gemini_with_tools(message: str, project_id: str, system_instruction: str
             f"Be specific and actionable."
         )
 
-    # Step 4: Get Gemini's final answer
-    response = client.models.generate_content(
-        model=primary_model_name,
-        contents=enriched_prompt,
-        config=types.GenerateContentConfig(
-            system_instruction=system_instruction,
-        ),
-    )
+    # Step 4: Get Gemini's final answer (with fallback support)
+    import time
+    last_error = None
+    for model_name in MODELS_TO_TRY:
+        for attempt in range(2):
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=enriched_prompt,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                    ),
+                )
+                return response.text
+            except Exception as e:
+                last_error = e
+                err_str = str(e).lower()
+                is_rate_limit = "429" in err_str or "resource_exhausted" in err_str or "quota" in err_str
+                print(f"[Gemini Assistant] Attempt {attempt + 1} with '{model_name}' failed: {e}")
+                if is_rate_limit:
+                    time.sleep(1.0)
+                    continue
 
-    return response.text
+    raise last_error
