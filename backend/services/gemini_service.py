@@ -258,7 +258,7 @@ def ask_gemini_with_tools(message: str, project_id: str, system_instruction: str
 
     # Step 4: Get Gemini's final answer
     response = client.models.generate_content(
-        model=gemini_model_name,
+        model=primary_model_name,
         contents=enriched_prompt,
         config=types.GenerateContentConfig(
             system_instruction=system_instruction,
